@@ -542,7 +542,7 @@ namespace ZigBeeNet
             return;
         }
 
-        public int SendCommand(ZigBeeCommand command)
+        public bool SendCommand(ZigBeeCommand command)
         {
             // Create the application frame
             ZigBeeApsFrame apsFrame = new ZigBeeApsFrame();
@@ -596,7 +596,7 @@ namespace ZigBeeNet
             catch (Exception e)
             {
                 Log.Debug("Error serializing ZigBee frame {Exception}", e);
-                return 0;
+                return false;
             }
 
             if (command is ZdoCommand)
@@ -631,6 +631,13 @@ namespace ZigBeeNet
                     Direction = zclCommand.CommandDirection
                 };
 
+
+                if (zclCommand.IsManufacturerSpecific())
+                {
+                    zclHeader.ManufacturerSpecific = true;
+                    zclHeader.ManufacturerCode = (ushort)zclCommand.ManufacturerCode.Value;
+                }
+
                 command.Serialize(fieldSerializer);
 
                 // Serialise the ZCL header and add the payload
@@ -643,7 +650,7 @@ namespace ZigBeeNet
 
             Transport.SendCommand(apsFrame);
 
-            return command.TransactionId.Value;
+            return true;
         }
 
         public void AddCommandListener(IZigBeeCommandListener commandListener)
