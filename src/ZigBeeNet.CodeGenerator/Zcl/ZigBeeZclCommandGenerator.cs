@@ -1,270 +1,278 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using ZigBeeNet.CodeGenerator.Xml;
+
 namespace ZigBeeNet.CodeGenerator.Zcl
 {
-    public class ZigBeeZclCommandGenerator extends ZigBeeBaseFieldGenerator
+    public class ZigBeeZclCommandGenerator : ZigBeeBaseFieldGenerator
     {
 
-        ZigBeeZclCommandGenerator(List<ZigBeeXmlCluster> clusters, String generatedDate, Map<String, String> dependencies) {
-            this.generatedDate = generatedDate;
-            this.dependencies = dependencies;
+        public ZigBeeZclCommandGenerator(List<ZigBeeXmlCluster> clusters, Dictionary<string, string> dependencies)
+        {
+            //this._generatedDate = generatedDate;
+            this._dependencies = dependencies;
 
-            for (ZigBeeXmlCluster cluster : clusters)
+            foreach (ZigBeeXmlCluster cluster in clusters)
             {
                 try
                 {
-                    generateZclClusterCommands(cluster, packageRoot, new File(sourceRootPath));
+                    GenerateZclClusterCommands(cluster, packageRoot, new FileStream(_sourceRootPath, FileMode.Open));
                 }
                 catch (IOException e)
                 {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    Console.WriteLine(e);
                 }
             }
         }
 
-    private void generateZclClusterCommands(ZigBeeXmlCluster cluster, String packageRootPrefix, File sourceRootPath)
-            throws IOException
-    {
+        private void GenerateZclClusterCommands(ZigBeeXmlCluster cluster, string packageRootPrefix, FileStream sourceRootPath)
+        {
 
-        for (final ZigBeeXmlCommand command : cluster.commands) {
-            final String packageRoot = getZclClusterCommandPackage(cluster);
-            final String packagePath = getPackagePath(sourceRootPath, packageRoot);
-            final File packageFile = getPackageFile(packagePath);
-
-            final String className = stringToUpperCamelCase(command.name);
-            final PrintWriter out = getClassOut(packageFile, className);
-
-            // List of fields that are handled internally by super class
-            List<String> reservedFields = new ArrayList<>();
-
-            importsClear();
-
-            for (final ZigBeeXmlField field : command.fields)
+            foreach (ZigBeeXmlCommand command in cluster.Commands)
             {
-                if (getDataTypeClass(field).startsWith("List"))
+                string packageRoot = GetZclClusterCommandPackage(cluster);
+                string packagePath = GetPackagePath(sourceRootPath, packageRoot);
+                FileStream packageFile = GetPackageFile(packagePath);
+
+                string className = StringToUpperCamelCase(command.Name);
+                TextWriter @out = GetClassOut(packageFile, className);
+
+                // List of fields that are handled internally by super class
+                List<string> reservedFields = new List<string>();
+
+                ImportsClear();
+
+                foreach (ZigBeeXmlField field in command.Fields)
                 {
-                    importsAdd("java.util.List");
-                }
-
-                if (field.sizer != null)
-                {
-                    importsAdd("java.util.ArrayList");
-                }
-            }
-            outputLicense(out);
-
-            out.println("package " + packageRoot + ";");
-            out.println();
-            importsAdd("javax.annotation.Generated");
-
-            if (command.response != null)
-            {
-                importsAdd(packageRootPrefix + ".transaction.ZigBeeTransactionMatcher");
-                importsAdd(packageRootPrefix + ".ZigBeeCommand");
-
-                importsAdd(packageRoot + "." + command.response.command);
-            }
-
-            String commandExtends = "";
-            if (packageRoot.contains(".zcl."))
-            {
-                importsAdd(packageRootPrefix + packageZcl + ".ZclCommand");
-                importsAdd(packageRootPrefix + packageZclProtocol + ".ZclCommandDirection");
-                commandExtends = "ZclCommand";
-            }
-            else
-            {
-                if (command.name.contains("Response"))
-                {
-                    commandExtends = "ZdoResponse";
-                    reservedFields.add("status");
-                }
-                else
-                {
-                    commandExtends = "ZdoRequest";
-                }
-                importsAdd(packageRootPrefix + packageZdp + "." + commandExtends);
-            }
-
-            if (command.fields.size() > 0)
-            {
-                importsAdd(packageRootPrefix + packageZcl + ".ZclFieldSerializer");
-                importsAdd(packageRootPrefix + packageZcl + ".ZclFieldDeserializer");
-                importsAdd(packageRootPrefix + packageZclProtocol + ".ZclDataType");
-            }
-
-            for (final ZigBeeXmlField field : command.fields)
-            {
-                importsAddClass(field);
-            }
-            outputImports(out);
-
-            out.println();
-            out.println("/**");
-            out.println(" * " + command.name + " value object class.");
-
-            out.println(" * <p>");
-            if (packageRoot.contains(".zcl."))
-            {
-                out.println(" * Cluster: <b>" + cluster.name + "</b>. Command ID 0x"
-                        + String.format("%02X", command.code) + " is sent <b>"
-                        + (command.source.equals("client") ? "TO" : "FROM") + "</b> the server.");
-                out.println(" * This command is " + ((cluster.name.equalsIgnoreCase("GENERAL"))
-                        ? "a <b>generic</b> command used across the profile."
-                        : "a <b>specific</b> command used for the " + cluster.name + " cluster."));
-            }
-
-            if (command.description.size() > 0)
-            {
-                out.println(" * <p>");
-                outputWithLinebreak(out, "", command.description);
-            }
-
-            out.println(" * <p>");
-            out.println(" * Code is auto-generated. Modifications may be overwritten!");
-            out.println(" */");
-            outputClassGenerated(out);
-            out.print("public class " + className + " extends " + commandExtends);
-            if (command.response != null)
-            {
-                out.print(" implements ZigBeeTransactionMatcher");
-            }
-            out.println(" {");
-
-            if (commandExtends.equals("ZclCommand"))
-            {
-                if (!cluster.name.equalsIgnoreCase("GENERAL"))
-                {
-                    out.println("    /**");
-                    out.println("     * The cluster ID to which this command belongs.");
-                    out.println("     */");
-                    out.println("    public static int CLUSTER_ID = 0x" + String.format("%04X", cluster.code) + ";");
-                    out.println();
-                }
-                out.println("    /**");
-                out.println("     * The command ID.");
-                out.println("     */");
-                out.println("    public static int COMMAND_ID = 0x" + String.format("%02X", command.code) + ";");
-                out.println();
-            }
-            else
-            {
-                out.println("    /**");
-                out.println("     * The ZDO cluster ID.");
-                out.println("     */");
-                out.println("    public static int CLUSTER_ID = 0x" + String.format("%04X", command.code) + ";");
-                out.println();
-            }
-
-            for (final ZigBeeXmlField field : command.fields)
-            {
-                if (reservedFields.contains(stringToLowerCamelCase(field.name)))
-                {
-                    continue;
-                }
-                if (getAutoSized(command.fields, stringToLowerCamelCase(field.name)) != null)
-                {
-                    continue;
-                }
-
-                out.println("    /**");
-                out.println("     * " + field.name + " command message field.");
-                if (field.description.size() != 0)
-                {
-                    out.println("     * <p>");
-                    outputWithLinebreak(out, "    ", field.description);
-                }
-                out.println("     */");
-                out.println("    private " + getDataTypeClass(field) + " " + stringToLowerCamelCase(field.name) + ";");
-                out.println();
-            }
-
-            out.println("    /**");
-            out.println("     * Default constructor.");
-            out.println("     */");
-            out.println("    public " + className + "() {");
-            if (!cluster.name.equalsIgnoreCase("GENERAL"))
-            {
-                out.println("        clusterId = CLUSTER_ID;");
-            }
-            if (commandExtends.equals("ZclCommand"))
-            {
-                out.println("        commandId = COMMAND_ID;");
-                out.println("        genericCommand = "
-                        + ((cluster.name.equalsIgnoreCase("GENERAL")) ? "true" : "false") + ";");
-                out.println("        commandDirection = ZclCommandDirection."
-                        + (command.source.equals("client") ? "CLIENT_TO_SERVER" : "SERVER_TO_CLIENT") + ";");
-            }
-            out.println("    }");
-
-            if (cluster.name.equalsIgnoreCase("GENERAL"))
-            {
-                out.println();
-                out.println("    /**");
-                out.println("     * Sets the cluster ID for <i>generic</i> commands. {@link " + className
-                        + "} is a <i>generic</i> command.");
-                out.println("     * <p>");
-                out.println(
-                        "     * For commands that are not <i>generic</i>, this method will do nothing as the cluster ID is fixed.");
-                out.println("     * To test if a command is <i>generic</i>, use the {@link #isGenericCommand} method.");
-                out.println("     *");
-                out.println(
-                        "     * @param clusterId the cluster ID used for <i>generic</i> commands as an {@link Integer}");
-
-                out.println("     */");
-                out.println("    @Override");
-                out.println("    public void setClusterId(Integer clusterId) {");
-                out.println("        this.clusterId = clusterId;");
-                out.println("    }");
-            }
-
-            generateFields(out, commandExtends, className, command.fields, reservedFields);
-
-            if (command.response != null)
-            {
-                out.println();
-                out.println("    @Override");
-                out.println("    public boolean isTransactionMatch(ZigBeeCommand request, ZigBeeCommand response) {");
-                if (command.response.matchers.isEmpty())
-                {
-                    out.println("        return (response instanceof " + command.response.command + ")");
-                    out.println("                && ((ZdoRequest) request).getDestinationAddress().equals((("
-                            + command.response.command + ") response).getSourceAddress());");
-                }
-                else
-                {
-                    out.println("        if (!(response instanceof " + command.response.command + ")) {");
-                    out.println("            return false;");
-                    out.println("        }");
-                    out.println();
-                    out.print("        return ");
-
-                    boolean first = true;
-                    for (ZigBeeXmlMatcher matcher : command.response.matchers)
+                    if (GetDataTypeClass(field).StartsWith("List"))
                     {
-                        if (first == false)
-                        {
-                            out.println();
-                            out.print("                && ");
-                        }
-                        first = false;
-                        out.println("(((" + stringToUpperCamelCase(command.name) + ") request).get"
-                                + matcher.commandField + "()");
-                        out.print("                .equals(((" + command.response.command + ") response).get"
-                                + matcher.responseField + "()))");
+                        ImportsAdd("java.util.List");
                     }
-                    out.println(";");
+
+                    if (field.Sizer != null)
+                    {
+                        ImportsAdd("java.util.ArrayList");
+                    }
                 }
-                out.println("    }");
+                OutputLicense(@out);
+
+                @out.WriteLine("package " + packageRoot + ";");
+                @out.WriteLine();
+                ImportsAdd("javax.annotation.Generated");
+
+                if (command.Response != null)
+                {
+                    ImportsAdd(packageRootPrefix + ".transaction.ZigBeeTransactionMatcher");
+                    ImportsAdd(packageRootPrefix + ".ZigBeeCommand");
+
+                    ImportsAdd(packageRoot + "." + command.Response.Command);
+                }
+
+                string commandExtends = "";
+                if (packageRoot.Contains(".zcl."))
+                {
+                    ImportsAdd(packageRootPrefix + packageZcl + ".ZclCommand");
+                    ImportsAdd(packageRootPrefix + packageZclProtocol + ".ZclCommandDirection");
+                    commandExtends = "ZclCommand";
+                }
+                else
+                {
+                    if (command.Name.Contains("Response"))
+                    {
+                        commandExtends = "ZdoResponse";
+                        reservedFields.Add("status");
+                    }
+                    else
+                    {
+                        commandExtends = "ZdoRequest";
+                    }
+                    ImportsAdd(packageRootPrefix + packageZdp + "." + commandExtends);
+                }
+
+                if (command.Fields.Count > 0)
+                {
+                    ImportsAdd(packageRootPrefix + packageZcl + ".ZclFieldSerializer");
+                    ImportsAdd(packageRootPrefix + packageZcl + ".ZclFieldDeserializer");
+                    ImportsAdd(packageRootPrefix + packageZclProtocol + ".ZclDataType");
+                }
+
+                foreach (ZigBeeXmlField field in command.Fields)
+                {
+                    ImportsAddClass(field);
+                }
+
+                OutputImports(@out);
+
+                @out.WriteLine();
+                @out.WriteLine("/**");
+                @out.WriteLine(" * " + command.Name + " value object class.");
+
+                @out.WriteLine(" * <p>");
+                if (packageRoot.Contains(".zcl."))
+                {
+                    @out.WriteLine(" * Cluster: <b>" + cluster.Name + "</b>. Command ID 0x"
+                            + command.Code.ToString("X2") + " is sent <b>"
+                            + (command.Source.Equals("client") ? "TO" : "FROM") + "</b> the server.");
+                    @out.WriteLine(" * This command is " + ((cluster.Name.Equals("GENERAL", StringComparison.InvariantCultureIgnoreCase))
+                            ? "a <b>generic</b> command used across the profile."
+                            : "a <b>specific</b> command used for the " + cluster.Name + " cluster."));
+                }
+
+                if (command.Description.Count > 0)
+                {
+                    @out.WriteLine(" * <p>");
+                    OutputWithLinebreak(@out, "", command.Description);
+                }
+
+                @out.WriteLine(" * <p>");
+                @out.WriteLine(" * Code is auto-generated. Modifications may be overwritten!");
+                @out.WriteLine(" */");
+                OutputClassGenerated(@out);
+                @out.Write("public class " + className + " extends " + commandExtends);
+                if (command.Response != null)
+                {
+                    @out.Write(" implements ZigBeeTransactionMatcher");
+                }
+                @out.WriteLine(" {");
+
+                if (commandExtends.Equals("ZclCommand"))
+                {
+                    if (!cluster.Name.Equals("GENERAL", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        @out.WriteLine("    /**");
+                        @out.WriteLine("     * The cluster ID to which this command belongs.");
+                        @out.WriteLine("     */");
+                        @out.WriteLine("    public static int CLUSTER_ID = 0x" + cluster.Code.ToString("X4") + ";");
+                        @out.WriteLine();
+                    }
+                    @out.WriteLine("    /**");
+                    @out.WriteLine("     * The command ID.");
+                    @out.WriteLine("     */");
+                    @out.WriteLine("    public static int COMMAND_ID = 0x" + command.Code.ToString("X2") + ";");
+                    @out.WriteLine();
+                }
+                else
+                {
+                    @out.WriteLine("    /**");
+                    @out.WriteLine("     * The ZDO cluster ID.");
+                    @out.WriteLine("     */");
+                    @out.WriteLine("    public static int CLUSTER_ID = 0x" + command.Code.ToString("X4") + ";");
+                    @out.WriteLine();
+                }
+
+                foreach (ZigBeeXmlField field in command.Fields)
+                {
+                    if (reservedFields.Contains(StringToLowerCamelCase(field.Name)))
+                    {
+                        continue;
+                    }
+                    if (GetAutoSized(command.Fields, StringToLowerCamelCase(field.Name)) != null)
+                    {
+                        continue;
+                    }
+
+                    @out.WriteLine("    /**");
+                    @out.WriteLine("     * " + field.Name + " command message field.");
+                    if (field.Description.Count != 0)
+                    {
+                        @out.WriteLine("     * <p>");
+                        OutputWithLinebreak(@out, "    ", field.Description);
+                    }
+                    @out.WriteLine("     */");
+                    @out.WriteLine("    private " + GetDataTypeClass(field) + " " + StringToLowerCamelCase(field.Name) + ";");
+                    @out.WriteLine();
+                }
+
+                @out.WriteLine("    /**");
+                @out.WriteLine("     * Default constructor.");
+                @out.WriteLine("     */");
+                @out.WriteLine("    public " + className + "() {");
+                if (!cluster.Name.Equals("GENERAL", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    @out.WriteLine("        clusterId = CLUSTER_ID;");
+                }
+                if (commandExtends.Equals("ZclCommand"))
+                {
+                    @out.WriteLine("        commandId = COMMAND_ID;");
+                    @out.WriteLine("        genericCommand = "
+                            + (cluster.Name.Equals("GENERAL", StringComparison.InvariantCultureIgnoreCase) ? "true" : "false") + ";");
+                    @out.WriteLine("        commandDirection = ZclCommandDirection."
+                            + (command.Source.Equals("client") ? "CLIENT_TO_SERVER" : "SERVER_TO_CLIENT") + ";");
+                }
+                @out.WriteLine("    }");
+
+                if (cluster.Name.Equals("GENERAL", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    @out.WriteLine();
+                    @out.WriteLine("    /**");
+                    @out.WriteLine("     * Sets the cluster ID for <i>generic</i> commands. {@link " + className
+                            + "} is a <i>generic</i> command.");
+                    @out.WriteLine("     * <p>");
+                    @out.WriteLine(
+                            "     * For commands that are not <i>generic</i>, this method will do nothing as the cluster ID is fixed.");
+                    @out.WriteLine("     * To test if a command is <i>generic</i>, use the {@link #isGenericCommand} method.");
+                    @out.WriteLine("     *");
+                    @out.WriteLine(
+                            "     * @param clusterId the cluster ID used for <i>generic</i> commands as an {@link Integer}");
+
+                    @out.WriteLine("     */");
+                    @out.WriteLine("    @Override");
+                    @out.WriteLine("    public void setClusterId(Integer clusterId) {");
+                    @out.WriteLine("        this.clusterId = clusterId;");
+                    @out.WriteLine("    }");
+                }
+
+                GenerateFields(@out, commandExtends, className, command.Fields, reservedFields);
+
+                if (command.Response != null)
+                {
+                    @out.WriteLine();
+                    @out.WriteLine("    @Override");
+                    @out.WriteLine("    public boolean isTransactionMatch(ZigBeeCommand request, ZigBeeCommand response) {");
+                    if (command.Response.Matchers.Count == 0)
+                    {
+                        @out.WriteLine("        return (response instanceof " + command.Response.Command + ")");
+                        @out.WriteLine("                && ((ZdoRequest) request).getDestinationAddress().equals((("
+                                + command.Response.Command + ") response).getSourceAddress());");
+                    }
+                    else
+                    {
+                        @out.WriteLine("        if (!(response instanceof " + command.Response.Command + ")) {");
+                        @out.WriteLine("            return false;");
+                        @out.WriteLine("        }");
+                        @out.WriteLine();
+                        @out.Write("        return ");
+
+                        bool first = true;
+                        foreach (ZigBeeXmlMatcher matcher in command.Response.Matchers)
+                        {
+                            if (first == false)
+                            {
+                                @out.WriteLine();
+                                @out.Write("                && ");
+                            }
+                            first = false;
+                            @out.WriteLine("(((" + StringToUpperCamelCase(command.Name) + ") request).get"
+                                    + matcher.CommandField + "()");
+                            @out.Write("                .equals(((" + command.Response.Command + ") response).get"
+                                    + matcher.ResponseField + "()))");
+                        }
+                        @out.WriteLine(";");
+                    }
+                    @out.WriteLine("    }");
+                }
+
+                GenerateToString(@out, className, command.Fields, reservedFields);
+
+                @out.WriteLine();
+                @out.WriteLine("}");
+
+                @out.Flush();
+                @out.Close();
             }
-
-            generateToString(out, className, command.fields, reservedFields);
-
-            out.println();
-            out.println("}");
-
-            out.flush();
-            out.close();
         }
-    }
 
+    }
 }

@@ -19,7 +19,9 @@ namespace ZigBeeNet.CodeGenerator
             IConfigurationRoot configuration = builder.Build();
             var section = configuration.GetSection("Settings");
 
-            ZclProtocolCodeGenerator.Generate(new string[] { section.GetValue<string>("outputPath") });
+            //ZclProtocolCodeGenerator.Generate(new string[] { section.GetValue<string>("outputPath") });
+
+            ZigBeeCodeGenerator.Generate(args);
 
             Console.WriteLine("Code generation done. Press any key to close this window ...");
             Console.ReadLine();

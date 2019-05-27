@@ -8,6 +8,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 {
     public abstract class ZigBeeBaseClassGenerator
     {
+        // TODO: check if fields can be private
         protected string _generatedDate;
         protected Dictionary<string, string> _dependencies;
 

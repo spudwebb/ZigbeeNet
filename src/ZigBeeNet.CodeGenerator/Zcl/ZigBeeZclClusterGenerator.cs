@@ -8,8 +8,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 {
     public class ZigBeeZclClusterGenerator : ZigBeeBaseClassGenerator
     {
-
-        ZigBeeZclClusterGenerator(List<ZigBeeXmlCluster> clusters, Dictionary<string, string> dependencies)
+        public ZigBeeZclClusterGenerator(List<ZigBeeXmlCluster> clusters, Dictionary<string, string> dependencies)
         {
             //this._generatedDate = _generatedDate;
             this._dependencies = dependencies;

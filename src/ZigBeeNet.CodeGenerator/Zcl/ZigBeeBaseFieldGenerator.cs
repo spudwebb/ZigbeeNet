@@ -1,265 +1,328 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using ZigBeeNet.CodeGenerator.Xml;
 
-public class ZigBeeBaseFieldGenerator : ZigBeeBaseClassGenerator {
-    private final String OPERATOR_LOGIC_AND = "LOGIC_AND";
-    private final String OPERATOR_EQUAL = "EQUAL";
-    private final String OPERATOR_NOT_EQUAL = "NOT_EQUAL";
-    private final String OPERATOR_GREATER_THAN = "GREATER_THAN";
-    private final String OPERATOR_GREATER_THAN_OR_EQUAL = "GREATER_THAN_OR_EQUAL";
-    private final String OPERATOR_LESS_THAN = "LESS_THAN";
-    private final String OPERATOR_LESS_THAN_OR_EQUAL = "LESS_THAN_OR_EQUAL";
+namespace ZigBeeNet.CodeGenerator.Zcl
+{
 
-    protected void generateFields(PrintWriter out, String parentClass, String className, List<ZigBeeXmlField> fields,
-            List<String> reservedFields) {
-        for (final ZigBeeXmlField field : fields) {
-            if (reservedFields.contains(stringToLowerCamelCase(field.name))) {
-                continue;
-            }
-            if (getAutoSized(fields, stringToLowerCamelCase(field.name)) != null) {
-                continue;
-            }
+    public class ZigBeeBaseFieldGenerator : ZigBeeBaseClassGenerator
+    {
+        private const string OPERATOR_LOGIC_AND = "LOGIC_AND";
+        private const string OPERATOR_EQUAL = "EQUAL";
+        private const string OPERATOR_NOT_EQUAL = "NOT_EQUAL";
+        private const string OPERATOR_GREATER_THAN = "GREATER_THAN";
+        private const string OPERATOR_GREATER_THAN_OR_EQUAL = "GREATER_THAN_OR_EQUAL";
+        private const string OPERATOR_LESS_THAN = "LESS_THAN";
+        private const string OPERATOR_LESS_THAN_OR_EQUAL = "LESS_THAN_OR_EQUAL";
 
-            out.println();
-            out.println("    /**");
-            out.println("     * Gets " + field.name + ".");
-            if (field.description.size() != 0) {
-                out.println("     * <p>");
-                outputWithLinebreak(out, "    ", field.description);
-            }
-            out.println("     *");
-            out.println("     * @return the " + field.name);
-            out.println("     */");
-            out.println("    public " + getDataTypeClass(field) + " get" + stringToUpperCamelCase(field.name) + "() {");
-            out.println("        return " + stringToLowerCamelCase(field.name) + ";");
-            out.println("    }");
-            out.println();
-            out.println("    /**");
-            out.println("     * Sets " + field.name + ".");
-            if (field.description.size() != 0) {
-                out.println("     * <p>");
-                outputWithLinebreak(out, "    ", field.description);
-            }
-            out.println("     *");
-            out.println("     * @param " + stringToLowerCamelCase(field.name) + " the " + field.name);
-            out.println("     */");
-            out.println("    public void set" + stringToUpperCamelCase(field.name) + "(final " + getDataTypeClass(field)
-                    + " " + stringToLowerCamelCase(field.name) + ") {");
-            out.println("        this." + stringToLowerCamelCase(field.name) + " = "
-                    + stringToLowerCamelCase(field.name) + ";");
-            out.println("    }");
-
-        }
-
-        if (fields.size() > 0) {
-            out.println();
-            out.println("    @Override");
-            out.println("    public void serialize(final ZclFieldSerializer serializer) {");
-            if (parentClass.startsWith("Zdo")) {
-                out.println("        super.serialize(serializer);");
-                out.println();
-            }
-
-            for (final ZigBeeXmlField field : fields) {
-                // if (reservedFields.contains(stringToLowerCamelCase(field.name))) {
-                // continue;
-                // }
-
-                // Rules...
-                // if listSizer == null, then just output the field
-                // if listSizer != null and contains && then check the param bit
-                if (getAutoSized(fields, stringToLowerCamelCase(field.name)) != null) {
-                    ZigBeeXmlField sizedField = getAutoSized(fields, stringToLowerCamelCase(field.name));
-                    out.println("        serializer.serialize(" + stringToLowerCamelCase(sizedField.name)
-                            + ".size(), ZclDataType." + field.type + ");");
-
+        protected void GenerateFields(TextWriter @out, string parentClass, string className, List<ZigBeeXmlField> fields, List<string> reservedFields)
+        {
+            foreach (ZigBeeXmlField field in fields)
+            {
+                if (reservedFields.Contains(StringToLowerCamelCase(field.Name)))
+                {
                     continue;
                 }
 
-                if (field.sizer != null) {
-                    out.println("        for (int cnt = 0; cnt < " + stringToLowerCamelCase(field.name)
-                            + ".size(); cnt++) {");
-                    out.println("            serializer.serialize(" + stringToLowerCamelCase(field.name)
-                            + ".get(cnt), ZclDataType." + field.type + ");");
-                    out.println("        }");
-                } else if (field.condition != null) {
-                    if (field.condition.value.equals("statusResponse")) {
-                        // Special case where a ZclStatus may be sent, or, a list of results.
-                        // This checks for a single response
-                        out.println("        if (status == ZclStatus.SUCCESS) {");
-                        out.println("            serializer.serialize(status, ZclDataType.ZCL_STATUS);");
-                        out.println("            return;");
-                        out.println("        }");
-                        continue;
-                    } else if (field.condition.operator.equals(OPERATOR_LOGIC_AND)) {
-                        out.println(
-                                "        if ((" + field.condition.field + " & " + field.condition.value + ") != 0) {");
-                    } else {
-                        out.println("        if (" + field.condition.field + " " + getOperator(field.condition.operator)
-                                + " " + field.condition.value + ") {");
-                    }
-                    out.println("            serializer.serialize(" + stringToLowerCamelCase(field.name)
-                            + ", ZclDataType." + field.type + ");");
-                    out.println("        }");
-                } else {
-                    if (field.type != null && !field.type.isEmpty()) {
-                        out.println("        serializer.serialize(" + stringToLowerCamelCase(field.name)
-                                + ", ZclDataType." + field.type + ");");
-                    } else {
-                        out.println("        " + stringToLowerCamelCase(field.name) + ".serialize(serializer);");
-                    }
-                }
-            }
-            out.println("    }");
-
-            out.println();
-            out.println("    @Override");
-            out.println("    public void deserialize(final ZclFieldDeserializer deserializer) {");
-            if (parentClass.startsWith("Zdo")) {
-                out.println("        super.deserialize(deserializer);");
-                out.println();
-            }
-            boolean first = true;
-            for (final ZigBeeXmlField field : fields) {
-                if (field.sizer != null) {
-                    if (first) {
-                        out.println("        // Create lists");
-                        first = false;
-                    }
-                    out.println("        " + stringToLowerCamelCase(field.name) + " = new Array"
-                            + getDataTypeClass(field) + "();");
-                }
-            }
-            if (first == false) {
-                out.println();
-            }
-            for (final ZigBeeXmlField field : fields) {
-                // if (reservedFields.contains(stringToLowerCamelCase(field.name))) {
-                // continue;
-                // }
-
-                if (field.completeOnZero) {
-                    out.println("        if (deserializer.isEndOfStream()) {");
-                    out.println("            return;");
-                    out.println("        }");
-                }
-                if (getAutoSized(fields, stringToLowerCamelCase(field.name)) != null) {
-                    out.println(
-                            "        Integer " + stringToLowerCamelCase(field.name) + " = (" + getDataTypeClass(field)
-                                    + ") deserializer.deserialize(" + "ZclDataType." + field.type + ");");
+                if (GetAutoSized(fields, StringToLowerCamelCase(field.Name)) != null)
+                {
                     continue;
                 }
 
-                if (field.sizer != null) {
-                    String dataType = getDataTypeClass(field).substring(getDataTypeClass(field).indexOf('<') + 1,
-                            getDataTypeClass(field).indexOf('>'));
+                @out.WriteLine();
+                @out.WriteLine("    /**");
+                @out.WriteLine("     * Gets " + field.Name + ".");
+                if (field.Description.Count != 0)
+                {
+                    @out.WriteLine("     * <p>");
+                    OutputWithLinebreak(@out, "    ", field.Description);
+                }
+                @out.WriteLine("     *");
+                @out.WriteLine("     * @return the " + field.Name);
+                @out.WriteLine("     */");
+                @out.WriteLine("    public " + GetDataTypeClass(field) + " get" + StringToUpperCamelCase(field.Name) + "() {");
+                @out.WriteLine("        return " + StringToLowerCamelCase(field.Name) + ";");
+                @out.WriteLine("    }");
+                @out.WriteLine();
+                @out.WriteLine("    /**");
+                @out.WriteLine("     * Sets " + field.Name + ".");
+                if (field.Description.Count != 0)
+                {
+                    @out.WriteLine("     * <p>");
+                    OutputWithLinebreak(@out, "    ", field.Description);
+                }
+                @out.WriteLine("     *");
+                @out.WriteLine("     * @param " + StringToLowerCamelCase(field.Name) + " the " + field.Name);
+                @out.WriteLine("     */");
+                @out.WriteLine("    public void set" + StringToUpperCamelCase(field.Name) + "( " + GetDataTypeClass(field)
+                        + " " + StringToLowerCamelCase(field.Name) + ") {");
+                @out.WriteLine("        this." + StringToLowerCamelCase(field.Name) + " = "
+                        + StringToLowerCamelCase(field.Name) + ";");
+                @out.WriteLine("    }");
 
-                    out.println("        if (" + field.sizer + " != null) {");
-                    out.println("            for (int cnt = 0; cnt < " + field.sizer + "; cnt++) {");
-                    out.println("                " + stringToLowerCamelCase(field.name) + ".add((" + dataType
-                            + ") deserializer.deserialize(" + "ZclDataType." + field.type + "));");
-                    out.println("            }");
-                    out.println("        }");
-                } else if (field.condition != null) {
-                    if (field.condition.value.equals("statusResponse")) {
-                        // Special case where a ZclStatus may be sent, or, a list of results.
-                        // This checks for a single response
-                        out.println("        if (deserializer.getRemainingLength() == 1) {");
-                        out.println(
-                                "            status = (ZclStatus) deserializer.deserialize(ZclDataType.ZCL_STATUS);");
-                        out.println("            return;");
-                        out.println("        }");
+            }
+
+            if (fields.Count > 0)
+            {
+                @out.WriteLine();
+                @out.WriteLine("    @Override");
+                @out.WriteLine("    public void serialize( ZclFieldSerializer serializer) {");
+                if (parentClass.StartsWith("Zdo"))
+                {
+                    @out.WriteLine("        super.serialize(serializer);");
+                    @out.WriteLine();
+                }
+
+                foreach (ZigBeeXmlField field in fields)
+                {
+                    // if (reservedFields.contains(StringToLowerCamelCase(field.Name))) {
+                    // continue;
+                    // }
+
+                    // Rules...
+                    // if listSizer == null, then just output the field
+                    // if listSizer != null and contains && then check the param bit
+                    if (GetAutoSized(fields, StringToLowerCamelCase(field.Name)) != null)
+                    {
+                        ZigBeeXmlField sizedField = GetAutoSized(fields, StringToLowerCamelCase(field.Name));
+                        @out.WriteLine("        serializer.serialize(" + StringToLowerCamelCase(sizedField.Name)
+                                + ".size(), ZclDataType." + field.Type + ");");
+
                         continue;
-                    } else if (field.condition.operator.equals(OPERATOR_LOGIC_AND)) {
-                        out.println(
-                                "        if ((" + field.condition.field + " & " + field.condition.value + ") != 0) {");
-                    } else {
-                        out.println("        if (" + field.condition.field + " " + getOperator(field.condition.operator)
-                                + " " + field.condition.value + ") {");
                     }
-                    out.println("            " + stringToLowerCamelCase(field.name) + " = (" + getDataTypeClass(field)
-                            + ") deserializer.deserialize(" + "ZclDataType." + field.type + ");");
-                    out.println("        }");
-                } else {
-                    if (!field.type.isEmpty()) {
-                        out.println("        " + stringToLowerCamelCase(field.name) + " = (" + getDataTypeClass(field)
-                                + ") deserializer.deserialize(" + "ZclDataType." + field.type + ");");
-                    } else {
-                        out.println("        " + stringToLowerCamelCase(field.name) + " = new "
-                                + getDataTypeClass(field) + "();");
-                        out.println("        " + stringToLowerCamelCase(field.name) + ".deserialize(deserializer);");
+
+                    if (field.Sizer != null)
+                    {
+                        @out.WriteLine("        for (int cnt = 0; cnt < " + StringToLowerCamelCase(field.Name)
+                                + ".size(); cnt++) {");
+                        @out.WriteLine("            serializer.serialize(" + StringToLowerCamelCase(field.Name)
+                                + ".get(cnt), ZclDataType." + field.Type + ");");
+                        @out.WriteLine("        }");
+                    }
+                    else if (field.Condition != null)
+                    {
+                        if (field.Condition.Value.Equals("statusResponse"))
+                        {
+                            // Special case where a ZclStatus may be sent, or, a list of results.
+                            // This checks for a single response
+                            @out.WriteLine("        if (status == ZclStatus.SUCCESS) {");
+                            @out.WriteLine("            serializer.serialize(status, ZclDataType.ZCL_STATUS);");
+                            @out.WriteLine("            return;");
+                            @out.WriteLine("        }");
+                            continue;
+                        }
+                        else if (field.Condition.Operator.Equals(OPERATOR_LOGIC_AND))
+                        {
+                            @out.WriteLine(
+                                    "        if ((" + field.Condition.Field + " & " + field.Condition.Value + ") != 0) {");
+                        }
+                        else
+                        {
+                            @out.WriteLine("        if (" + field.Condition.Field + " " + GetOperator(field.Condition.Operator)
+                                    + " " + field.Condition.Value + ") {");
+                        }
+                        @out.WriteLine("            serializer.serialize(" + StringToLowerCamelCase(field.Name)
+                                + ", ZclDataType." + field.Type + ");");
+                        @out.WriteLine("        }");
+                    }
+                    else
+                    {
+                        if (field.Type != null && !string.IsNullOrEmpty(field.Type))
+                        {
+                            @out.WriteLine("        serializer.serialize(" + StringToLowerCamelCase(field.Name)
+                                    + ", ZclDataType." + field.Type + ");");
+                        }
+                        else
+                        {
+                            @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + ".serialize(serializer);");
+                        }
                     }
                 }
+                @out.WriteLine("    }");
 
-                if (field.name.toLowerCase().equals("status") && field.type.equals("ZDO_STATUS")) {
-                    out.println("        if (status != ZdoStatus.SUCCESS) {");
-                    out.println("            // Don't read the full response if we have an error");
-                    out.println("            return;");
-                    out.println("        }");
+                @out.WriteLine();
+                @out.WriteLine("    @Override");
+                @out.WriteLine("    public void deserialize( ZclFieldDeserializer deserializer) {");
+                if (parentClass.StartsWith("Zdo"))
+                {
+                    @out.WriteLine("        super.deserialize(deserializer);");
+                    @out.WriteLine();
+                }
+                bool first = true;
+                foreach (ZigBeeXmlField field in fields)
+                {
+                    if (field.Sizer != null)
+                    {
+                        if (first)
+                        {
+                            @out.WriteLine("        // Create lists");
+                            first = false;
+                        }
+                        @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + " = new Array"
+                                                    + GetDataTypeClass(field) + "();");
+                    }
+                }
+                if (first == false)
+                {
+                    @out.WriteLine();
+                }
+                foreach (ZigBeeXmlField field in fields)
+                {
+                    // if (reservedFields.contains(StringToLowerCamelCase(field.Name))) {
+                    // continue;
+                    // }
+
+                    if (field.CompleteOnZero)
+                    {
+                        @out.WriteLine("        if (deserializer.isEndOfStream()) {");
+                        @out.WriteLine("            return;");
+                        @out.WriteLine("        }");
+                    }
+                    if (GetAutoSized(fields, StringToLowerCamelCase(field.Name)) != null)
+                    {
+                        @out.WriteLine(
+                                "        Integer " + StringToLowerCamelCase(field.Name) + " = (" + GetDataTypeClass(field)
+                                        + ") deserializer.deserialize(" + "ZclDataType." + field.Type + ");");
+                        continue;
+                    }
+
+                    if (field.Sizer != null)
+                    {
+                        string dataType = GetDataTypeClass(field).Substring(GetDataTypeClass(field).IndexOf('<') + 1,
+                                GetDataTypeClass(field).IndexOf('>'));
+
+                        @out.WriteLine("        if (" + field.Sizer + " != null) {");
+                        @out.WriteLine("            for (int cnt = 0; cnt < " + field.Sizer + "; cnt++) {");
+                        @out.WriteLine("                " + StringToLowerCamelCase(field.Name) + ".add((" + dataType
+                                + ") deserializer.deserialize(" + "ZclDataType." + field.Type + "));");
+                        @out.WriteLine("            }");
+                        @out.WriteLine("        }");
+                    }
+                    else if (field.Condition != null)
+                    {
+                        if (field.Condition.Value.Equals("statusResponse"))
+                        {
+                            // Special case where a ZclStatus may be sent, or, a list of results.
+                            // This checks for a single response
+                            @out.WriteLine("        if (deserializer.getRemainingLength() == 1) {");
+                            @out.WriteLine(
+                                    "            status = (ZclStatus) deserializer.deserialize(ZclDataType.ZCL_STATUS);");
+                            @out.WriteLine("            return;");
+                            @out.WriteLine("        }");
+                            continue;
+                        }
+                        else if (field.Condition.Operator.Equals(OPERATOR_LOGIC_AND))
+                        {
+                            @out.WriteLine(
+                                    "        if ((" + field.Condition.Field + " & " + field.Condition.Value + ") != 0) {");
+                        }
+                        else
+                        {
+                            @out.WriteLine("        if (" + field.Condition.Field + " " + GetOperator(field.Condition.Operator)
+                                    + " " + field.Condition.Value + ") {");
+                        }
+                        @out.WriteLine("            " + StringToLowerCamelCase(field.Name) + " = (" + GetDataTypeClass(field)
+                                + ") deserializer.deserialize(" + "ZclDataType." + field.Type + ");");
+                        @out.WriteLine("        }");
+                    }
+                    else
+                    {
+                        if (!string.IsNullOrEmpty(field.Type))
+                        {
+                            @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + " = (" + GetDataTypeClass(field)
+                                    + ") deserializer.deserialize(" + "ZclDataType." + field.Type + ");");
+                        }
+                        else
+                        {
+                            @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + " = new "
+                                    + GetDataTypeClass(field) + "();");
+                            @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + ".deserialize(deserializer);");
+                        }
+                    }
+
+                    if (field.Name.ToLower().Equals("status") && field.Type.Equals("ZDO_STATUS"))
+                    {
+                        @out.WriteLine("        if (status != ZdoStatus.SUCCESS) {");
+                        @out.WriteLine("            // Don't read the full response if we have an error");
+                        @out.WriteLine("            return;");
+                        @out.WriteLine("        }");
+                    }
+                }
+                @out.WriteLine("    }");
+            }
+        }
+
+        protected void GenerateToString(TextWriter @out, string className, List<ZigBeeXmlField> fields, List<string> reservedFields)
+        {
+            int fieldLen = 0;
+            foreach (ZigBeeXmlField field in fields)
+            {
+                fieldLen += StringToLowerCamelCase(field.Name).Length + 20;
+            }
+
+            @out.WriteLine();
+            @out.WriteLine("    @Override");
+            @out.WriteLine("    public String toString() {");
+            @out.WriteLine("        final StringBuilder builder = new StringBuilder(" + (className.Length + 3 + fieldLen)
+                    + ");");
+
+            @out.WriteLine("        builder.append(\"" + className + " [\");");
+            @out.WriteLine("        builder.append(super.toString());");
+            foreach (ZigBeeXmlField field in fields)
+            {
+                // if (reservedFields.contains(stringToLowerCamelCase(field.name))) {
+                // continue;
+                // }
+                if (GetAutoSized(fields, StringToLowerCamelCase(field.Name)) != null)
+                {
+                    continue;
+                }
+                @out.WriteLine("        builder.append(\", " + StringToLowerCamelCase(field.Name) + "=\");");
+                @out.WriteLine("        builder.append(" + StringToLowerCamelCase(field.Name) + ");");
+            }
+            @out.WriteLine("        builder.append(\']\');");
+            @out.WriteLine("        return builder.toString();");
+            @out.WriteLine("    }");
+        }
+
+        private string GetOperator(string @operator)
+        {
+            switch (@operator)
+            {
+                case OPERATOR_LOGIC_AND:
+                    return "&&";
+                case OPERATOR_EQUAL:
+                    return "==";
+                case OPERATOR_NOT_EQUAL:
+                    return "!=";
+                case OPERATOR_GREATER_THAN:
+                    return ">";
+                case OPERATOR_GREATER_THAN_OR_EQUAL:
+                    return ">=";
+                case OPERATOR_LESS_THAN:
+                    return "<";
+                case OPERATOR_LESS_THAN_OR_EQUAL:
+                    return "<";
+                default:
+                    return "<<Unknown " + @operator +">>";
+            }
+        }
+
+        protected ZigBeeXmlField GetAutoSized(List<ZigBeeXmlField> fields, string name)
+        {
+            foreach (ZigBeeXmlField field in fields)
+            {
+                if (field.Sizer != null)
+                {
+                    Console.WriteLine();
+                }
+                if (name.Equals(field.Sizer))
+                {
+                    return field;
                 }
             }
-            out.println("    }");
+            return null;
         }
-    }
-
-    protected void generateToString(PrintWriter out, String className, List<ZigBeeXmlField> fields,
-            List<String> reservedFields) {
-        int fieldLen = 0;
-        for (final ZigBeeXmlField field : fields) {
-            fieldLen += stringToLowerCamelCase(field.name).length() + 20;
-        }
-
-        out.println();
-        out.println("    @Override");
-        out.println("    public String toString() {");
-        out.println("        final StringBuilder builder = new StringBuilder(" + (className.length() + 3 + fieldLen)
-                + ");");
-
-        out.println("        builder.append(\"" + className + " [\");");
-        out.println("        builder.append(super.toString());");
-        for (final ZigBeeXmlField field : fields) {
-            // if (reservedFields.contains(stringToLowerCamelCase(field.name))) {
-            // continue;
-            // }
-            if (getAutoSized(fields, stringToLowerCamelCase(field.name)) != null) {
-                continue;
-            }
-            out.println("        builder.append(\", " + stringToLowerCamelCase(field.name) + "=\");");
-            out.println("        builder.append(" + stringToLowerCamelCase(field.name) + ");");
-        }
-        out.println("        builder.append(\']\');");
-        out.println("        return builder.toString();");
-        out.println("    }");
-    }
-
-    private String getOperator(String operator) {
-        switch (operator) {
-            case OPERATOR_LOGIC_AND:
-                return "&&";
-            case OPERATOR_EQUAL:
-                return "==";
-            case OPERATOR_NOT_EQUAL:
-                return "!=";
-            case OPERATOR_GREATER_THAN:
-                return ">";
-            case OPERATOR_GREATER_THAN_OR_EQUAL:
-                return ">=";
-            case OPERATOR_LESS_THAN:
-                return "<";
-            case OPERATOR_LESS_THAN_OR_EQUAL:
-                return "<";
-            default:
-                return "<<Unknown " + operator + ">>";
-        }
-    }
-
-    protected ZigBeeXmlField getAutoSized(List<ZigBeeXmlField> fields, String name) {
-        for (ZigBeeXmlField field : fields) {
-            if (field.sizer != null) {
-                System.out.println();
-            }
-            if (name.equals(field.sizer)) {
-                return field;
-            }
-        }
-        return null;
     }
 }

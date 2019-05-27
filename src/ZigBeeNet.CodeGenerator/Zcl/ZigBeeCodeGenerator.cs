@@ -9,8 +9,8 @@ namespace ZigBeeNet.CodeGenerator.Zcl
     {
         public static void Generate(string[] args)
         {
-            string sourceRootPath = "target/src/main/java/";
-            string outRootPath = "../com.zsmartsystems.zigbee/src/main/java/";
+            //string sourceRootPath = "target/src/main/java/";
+            //string outRootPath = "C:/temp/java";
 
             //DeleteRecursive(new File(sourceRootPath));
 
@@ -73,152 +73,152 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             zclParser.AddFile("./Resources/0B04_ElectricalMeasurement.xml");
             zclParser.AddFile("./Resources/0B05_Diagnostics.xml");
 
-            List<ZigBeeXmlCluster> zclClusters = zclParser.parseClusterConfiguration();
+            List<ZigBeeXmlCluster> zclClusters = zclParser.ParseClusterConfiguration();
 
             ZigBeeXmlParser zdoParser = new ZigBeeXmlParser();
-            zdoParser.AddFile("src/main/resources/XXXX_ZigBeeDeviceObject.xml");
+            zdoParser.AddFile("./Resources/XXXX_ZigBeeDeviceObject.xml");
 
-            List<ZigBeeXmlCluster> zdoClusters = zdoParser.parseClusterConfiguration();
+            List<ZigBeeXmlCluster> zdoClusters = zdoParser.ParseClusterConfiguration();
 
             // Process all enums, bitmaps and structures first so we have a consolidated list.
             // We use this later when generating the imports in the cluster and command classes.
             List<ZigBeeXmlCluster> allClusters = new List<ZigBeeXmlCluster>();
             allClusters.AddRange(zclClusters);
             allClusters.AddRange(zdoClusters);
-            //ZigBeeZclDependencyGenerator typeGenerator = new ZigBeeZclDependencyGenerator(allClusters);
-            //Map<String, String> zclTypes = typeGenerator.getDependencyMap();
+            ZigBeeZclDependencyGenerator typeGenerator = new ZigBeeZclDependencyGenerator(allClusters);
+            Dictionary<string, string> zclTypes = typeGenerator.GetDependencyMap();
 
-            new ZigBeeZclClusterGenerator(zclClusters, generatedDate, zclTypes);
-            new ZigBeeZclCommandGenerator(zclClusters, generatedDate, zclTypes);
+            var zclClusterGenerator = new ZigBeeZclClusterGenerator(zclClusters, zclTypes);
+            var commandGenerator = new ZigBeeZclCommandGenerator(zclClusters, zclTypes);
             //new ZigBeeZclConstantGenerator(zclClusters, generatedDate, zclTypes);
             //new ZigBeeZclStructureGenerator(zclClusters, generatedDate, zclTypes);
             //new ZigBeeZclClusterTypeGenerator(zclClusters, generatedDate, zclTypes);
 
-            new ZigBeeZclCommandGenerator(zdoClusters, generatedDate, zclTypes);
+            var zdoClusterGenerator = new ZigBeeZclCommandGenerator(zdoClusters, zclTypes);
 
             zclParser = new ZigBeeXmlParser();
-            zclParser.addFile("src/main/resources/zigbee_constants.xml");
-            ZigBeeXmlGlobal globals = zclParser.parseGlobalConfiguration();
+            zclParser.AddFile("./Resources/zigbee_constants.xml");
+            ZigBeeXmlGlobal globals = zclParser.ParseGlobalConfiguration();
 
-            for (ZigBeeXmlConstant constant : globals.constants)
-            {
-                new ZigBeeZclConstantGenerator(constant, generatedDate);
-            }
+            //foreach (ZigBeeXmlConstant constant in globals.Constants)
+            //{
+            //    new ZigBeeZclConstantGenerator(constant);
+            //}
 
-            String inRootPath = sourceRootPath.substring(0, sourceRootPath.length() - 1);
-            compareFiles(inRootPath, outRootPath, "");
+            //string inRootPath = sourceRootPath.Substring(0, sourceRootPath.Length - 1);
+            //compareFiles(inRootPath, outRootPath, "");
 
-            new ZigBeeZclReadmeGenerator(zclClusters);
+            //new ZigBeeZclReadmeGenerator(zclClusters);
         }
 
-        private static boolean fileCompare(String file1, String file2) throws IOException
-        {
-            File f = new File(file1);
-        if (!f.exists()) {
-            return false;
-        }
-        f = new File(file2);
-        if (!f.exists()) {
-            return false;
-        }
+//        private static boolean fileCompare(String file1, String file2) throws IOException
+//        {
+//            File f = new File(file1);
+//        if (!f.exists()) {
+//            return false;
+//        }
+//        f = new File(file2);
+//        if (!f.exists()) {
+//            return false;
+//        }
 
-        BufferedReader reader1 = new BufferedReader(new FileReader(file1));
-        BufferedReader reader2 = new BufferedReader(new FileReader(file2));
+//        BufferedReader reader1 = new BufferedReader(new FileReader(file1));
+//        BufferedReader reader2 = new BufferedReader(new FileReader(file2));
 
-        String line1 = reader1.readLine();
-        String line2 = reader2.readLine();
+//        String line1 = reader1.readLine();
+//        String line2 = reader2.readLine();
 
-        boolean areEqual = true;
+//        boolean areEqual = true;
 
-        int lineNum = 1;
+//        int lineNum = 1;
 
-        while (line1 != null || line2 != null) {
-            if (line1 == null || line2 == null) {
-                areEqual = false;
+//        while (line1 != null || line2 != null) {
+//            if (line1 == null || line2 == null) {
+//                areEqual = false;
 
-                break;
-            } else if (!line1.startsWith("@Generated") && !line1.equalsIgnoreCase(line2)) {
-                areEqual = false;
+//                break;
+//            } else if (!line1.startsWith("@Generated") && !line1.equalsIgnoreCase(line2)) {
+//                areEqual = false;
 
-                break;
-            }
+//                break;
+//            }
 
-line1 = reader1.readLine();
-            line2 = reader2.readLine();
+//line1 = reader1.readLine();
+//            line2 = reader2.readLine();
 
-            lineNum++;
-        }
+//            lineNum++;
+//        }
 
-        if (areEqual) {
-            System.out.println("Two files have same content.");
-        } else {
-            System.out.println("Two files have different content. They differ at line " + lineNum);
-System.out.println("File1 has " + line1 + " and File2 has " + line2 + " at line " + lineNum);
-        }
+//        if (areEqual) {
+//            System.out.println("Two files have same content.");
+//        } else {
+//            System.out.println("Two files have different content. They differ at line " + lineNum);
+//System.out.println("File1 has " + line1 + " and File2 has " + line2 + " at line " + lineNum);
+//        }
 
-        reader1.close();
-        reader2.close();
+//        reader1.close();
+//        reader2.close();
 
-        return areEqual;
-    }
+//        return areEqual;
+//    }
 
-    private static void copyFile(String source, String dest) throws IOException
-{
-    File target = new File(dest);
+//    private static void copyFile(String source, String dest) throws IOException
+//{
+//    File target = new File(dest);
 
-File parent = target.getParentFile();
-        if (!parent.exists() && !parent.mkdirs()) {
-            throw new IllegalStateException("Couldn't create dir: " + parent);
-        }
+//File parent = target.getParentFile();
+//        if (!parent.exists() && !parent.mkdirs()) {
+//            throw new IllegalStateException("Couldn't create dir: " + parent);
+//        }
 
-        if (target.exists()) {
-            Files.delete(new File(dest).toPath());
-        }
+//        if (target.exists()) {
+//            Files.delete(new File(dest).toPath());
+//        }
 
-        Files.copy(new File(source).toPath(), new File(dest).toPath());
-    }
+//        Files.copy(new File(source).toPath(), new File(dest).toPath());
+//    }
 
-    private static void compareFiles(String inFolder, String outFolder, String folder)
-{
-    File[] files = new File(inFolder + folder).listFiles();
-    for (File file : files)
-    {
-        if (file.isDirectory())
-        {
-            compareFiles(inFolder, outFolder, folder + "/" + file.getName());
-        }
-        else
-        {
-            System.out.println("File: " + folder + "/" + file.getName());
-            try
-            {
-                if (!fileCompare(inFolder + folder + "/" + file.getName(),
-                        outFolder + folder + "/" + file.getName()))
-                {
-                    copyFile(inFolder + folder + "/" + file.getName(), outFolder + folder + "/" + file.getName());
-                    System.out.println("File: " + folder + "/" + file.getName() + " updated");
-                }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-    }
-}
+//    private static void compareFiles(String inFolder, String outFolder, String folder)
+//{
+//    File[] files = new File(inFolder + folder).listFiles();
+//    for (File file : files)
+//    {
+//        if (file.isDirectory())
+//        {
+//            compareFiles(inFolder, outFolder, folder + "/" + file.getName());
+//        }
+//        else
+//        {
+//            System.out.println("File: " + folder + "/" + file.getName());
+//            try
+//            {
+//                if (!fileCompare(inFolder + folder + "/" + file.getName(),
+//                        outFolder + folder + "/" + file.getName()))
+//                {
+//                    copyFile(inFolder + folder + "/" + file.getName(), outFolder + folder + "/" + file.getName());
+//                    System.out.println("File: " + folder + "/" + file.getName() + " updated");
+//                }
+//            }
+//            catch (IOException e)
+//            {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+//}
 
-private static boolean deleteRecursive(File path)
-{
-    boolean ret = true;
-    if (path.isDirectory())
-    {
-        for (File f : path.listFiles())
-        {
-            ret = ret && deleteRecursive(f);
-        }
-    }
-    return ret && path.delete();
-}
+//private static boolean deleteRecursive(File path)
+//{
+//    boolean ret = true;
+//    if (path.isDirectory())
+//    {
+//        for (File f : path.listFiles())
+//        {
+//            ret = ret && deleteRecursive(f);
+//        }
+//    }
+//    return ret && path.delete();
+//}
 
 }
 }

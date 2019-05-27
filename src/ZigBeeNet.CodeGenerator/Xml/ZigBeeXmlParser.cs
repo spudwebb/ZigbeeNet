@@ -20,7 +20,7 @@ namespace ZigBeeNet.CodeGenerator.Xml
             files.Add(filename);
         }
 
-        public List<ZigBeeXmlCluster> parseClusterConfiguration()
+        public List<ZigBeeXmlCluster> ParseClusterConfiguration()
         {
             List<ZigBeeXmlCluster> clusters = new List<ZigBeeXmlCluster>();
 
@@ -47,46 +47,48 @@ namespace ZigBeeNet.CodeGenerator.Xml
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Console.WriteLine(e);
                 return null;
             }
 
             return clusters;
         }
 
-        //public ZigBeeXmlGlobal parseGlobalConfiguration()
-        //{
-        //    ZigBeeXmlGlobal globals = new ZigBeeXmlGlobal();
-        //    globals.constants = new ArrayList<ZigBeeXmlConstant>();
+        public ZigBeeXmlGlobal ParseGlobalConfiguration()
+        {
+            ZigBeeXmlGlobal globals = new ZigBeeXmlGlobal();
+            globals.Constants = new List<ZigBeeXmlConstant>();
 
-        //    try
-        //    {
-        //        for (String file : files)
-        //        {
-        //            System.out.println("Parsing globals file: " + file);
-        //            // Load the class definitions
-        //            File fXmlFile = new File(file);
-        //            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        //            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-        //            Document doc = dBuilder.parse(fXmlFile);
-        //            doc.getDocumentElement().normalize();
+            try
+            {
+                foreach (string file in files)
+                {
+                    Console.WriteLine("Parsing globals file: " + file);
+                    // Load the class definitions
+                    //FileStream fXmlFile = new FileStream(file, FileMode.Open);
+                    XDocument doc = XDocument.Load(new FileStream(file, FileMode.Open));
 
-        //            // Get all global specific definitions
-        //            NodeList nList = doc.getElementsByTagName("zigbee");
-        //            ZigBeeXmlGlobal global = (ZigBeeXmlGlobal)processNode(nList.item(0));
-        //            globals.constants.addAll(global.constants);
-        //        }
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        e.printStackTrace();
-        //        return null;
-        //    }
+                    //DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                    //DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+                    //Document doc = dBuilder.parse(fXmlFile);
+                    //doc.getDocumentElement().normalize();
 
-        //    return globals;
-        //}
+                    // Get all global specific definitions
+                    var nList = doc.Elements("zigbee");
+                    ZigBeeXmlGlobal global = (ZigBeeXmlGlobal)ProcessNode(nList.ElementAt(0));
+                    globals.Constants.AddRange(global.Constants);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return null;
+            }
 
-        Object ProcessNode(XElement node)
+            return globals;
+        }
+
+        object ProcessNode(XElement node)
         {
             var nodes = node.Elements();
             XElement e;
@@ -198,7 +200,7 @@ namespace ZigBeeNet.CodeGenerator.Xml
 
                     e = node;
 
-                    command.Name = e.Attribute("name").Value.Trim();
+                    command.Name = e.Element("name").Value.Trim();
                     command.Code = (int)GetInteger(e.Attribute("code").Value);
                     command.Source = e.Attribute("source").Value;
 
