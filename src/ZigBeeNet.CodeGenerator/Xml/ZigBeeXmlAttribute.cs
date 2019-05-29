@@ -18,8 +18,8 @@ namespace ZigBeeNet.CodeGenerator.Xml
         public bool Optional { get; set; }
         public bool Writable { get; set; }
         public bool Reportable { get; set; }
-        public BigInteger MinimumValue { get; set; }
-        public BigInteger MaximumValue { get; set; }
-        public BigInteger DefaultValue { get; set; }
+        public BigInteger? MinimumValue { get; set; }
+        public BigInteger? MaximumValue { get; set; }
+        public BigInteger? DefaultValue { get; set; }
     }
 }

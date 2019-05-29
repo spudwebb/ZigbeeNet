@@ -161,31 +161,31 @@ namespace ZigBeeNet.CodeGenerator.Xml
                     attribute.Reportable = bool.Parse(e.Attribute("reportable").Value);
                     attribute.Optional = bool.Parse(e.Attribute("optional").Value);
                     attribute.Type = e.Attribute("type").Value.Trim();
-                    attribute.ImplementationClass = e.Attribute("class").Value.Trim();
-                    attribute.MinimumValue = GetInteger(e.Attribute("minimum").Value).Value;
-                    attribute.MaximumValue = GetInteger(e.Attribute("maximum").Value).Value;
-                    attribute.DefaultValue = GetInteger(e.Attribute("default").Value).Value;
+                    attribute.ImplementationClass = e.Attribute("class")?.Value.Trim();
+                    attribute.MinimumValue = GetInteger(e.Attribute("minimum")?.Value);
+                    attribute.MaximumValue = GetInteger(e.Attribute("maximum")?.Value);
+                    attribute.DefaultValue = GetInteger(e.Attribute("default")?.Value);
 
-                    if (GetInteger(e.Attribute("arraycount").Value) != null)
+                    if (GetInteger(e.Attribute("arraycount")?.Value) != null)
                     {
                         attribute.ArrayCount = (int)GetInteger(e.Attribute("arraycount").Value);
                     }
-                    if (GetInteger(e.Attribute("arraystart").Value) != null)
+                    if (GetInteger(e.Attribute("arraystart")?.Value) != null)
                     {
                         attribute.ArrayStart = (int)GetInteger(e.Attribute("arraystart").Value);
                     }
-                    if (GetInteger(e.Attribute("arraystep").Value) != null)
+                    if (GetInteger(e.Attribute("arraystep")?.Value) != null)
                     {
                         attribute.ArrayStep = (int)GetInteger(e.Attribute("arraystep").Value);
                     }
 
                     for (int temp = 0; temp < nodes.Count(); temp++)
                     {
-                        if (nodes.ElementAt(temp).Name.Equals("name"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("name"))
                         {
                             attribute.Name = nodes.ElementAt(temp).Value.Trim();
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("description"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("description"))
                         {
                             attribute.Description.Add((ZigBeeXmlDescription)ProcessNode(nodes.ElementAt(temp)));
                         }
@@ -206,19 +206,19 @@ namespace ZigBeeNet.CodeGenerator.Xml
 
                     for (int temp = 0; temp < nodes.Count(); temp++)
                     {
-                        if (nodes.ElementAt(temp).Name.Equals("name"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("name"))
                         {
                             command.Name = nodes.ElementAt(temp).Value.Trim();
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("description"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("description"))
                         {
                             command.Description.Add((ZigBeeXmlDescription)ProcessNode(nodes.ElementAt(temp)));
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("field"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("field"))
                         {
                             command.Fields.Add((ZigBeeXmlField)ProcessNode(nodes.ElementAt(temp)));
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("response"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("response"))
                         {
                             command.Response = (ZigBeeXmlResponse)ProcessNode(nodes.ElementAt(temp));
                         }
@@ -231,30 +231,30 @@ namespace ZigBeeNet.CodeGenerator.Xml
                     field.Description = new List<ZigBeeXmlDescription>();
 
                     e = node;
-                    if (e.Attribute("completeOnZero").Value.Length > 0)
+                    if (e.Attribute("completeOnZero")?.Value.Length > 0)
                     {
                         string x = e.Attribute("completeOnZero").Value;
                         Console.WriteLine(x);
                     }
-                    field.Type = e.Attribute("type").Value.Trim();
-                    field.CompleteOnZero = "true".Equals(e.Attribute("completeOnZero").Value.Trim());
-                    field.ImplementationClass = e.Attribute("class").Value.Trim();
-                    field.Array = bool.Parse(e.Attribute("array").Value);
+                    field.Type = e.Attribute("type")?.Value.Trim();
+                    field.CompleteOnZero = "true".Equals(e.Attribute("completeOnZero")?.Value.Trim());
+                    field.ImplementationClass = e.Attribute("class")?.Value.Trim();
+                    field.Array = e.Attribute("array") != null ? bool.Parse(e.Attribute("array").Value) : false;
                     for (int temp = 0; temp < nodes.Count(); temp++)
                     {
-                        if (nodes.ElementAt(temp).Name.Equals("name"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("name"))
                         {
                             field.Name = nodes.ElementAt(temp).Value.Trim();
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("sizer"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("sizer"))
                         {
                             field.Sizer = nodes.ElementAt(temp).Value.Trim();
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("description"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("description"))
                         {
                             field.Description.Add((ZigBeeXmlDescription)ProcessNode(nodes.ElementAt(temp)));
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("conditional"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("conditional"))
                         {
                             field.Condition = (ZigBeeXmlCondition)ProcessNode(nodes.ElementAt(temp));
                         }
@@ -274,15 +274,15 @@ namespace ZigBeeNet.CodeGenerator.Xml
 
                     for (int temp = 0; temp < nodes.Count(); temp++)
                     {
-                        if (nodes.ElementAt(temp).Name.Equals("name"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("name"))
                         {
                             constant.Name = nodes.ElementAt(temp).Value.Trim();
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("description"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("description"))
                         {
                             constant.Description.Add((ZigBeeXmlDescription)ProcessNode(nodes.ElementAt(temp)));
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("value"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("value"))
                         {
                             e = nodes.ElementAt(temp);
                             string name = e.Attribute("name").Value.Trim();
@@ -300,20 +300,20 @@ namespace ZigBeeNet.CodeGenerator.Xml
 
                     e = node;
 
-                    structure.Name = e.Attribute("name").Value.Trim();
-                    structure.ClassName = e.Attribute("class").Value.Trim();
+                    structure.Name = e.Attribute("name")?.Value.Trim();
+                    structure.ClassName = e.Attribute("class")?.Value.Trim();
 
                     for (int temp = 0; temp < nodes.Count(); temp++)
                     {
-                        if (nodes.ElementAt(temp).Name.Equals("name"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("name"))
                         {
                             structure.Name = nodes.ElementAt(temp).Value.Trim();
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("description"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("description"))
                         {
                             structure.Description.Add((ZigBeeXmlDescription)ProcessNode(nodes.ElementAt(temp)));
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("field"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("field"))
                         {
                             structure.Fields.Add((ZigBeeXmlField)ProcessNode(nodes.ElementAt(temp)));
                         }
@@ -327,9 +327,11 @@ namespace ZigBeeNet.CodeGenerator.Xml
                     e = node;
 
                     // TODO: use string.IsNullOrEmpty() instead ?
-                    if (nodes.ElementAt(0) != null && nodes.ElementAt(0).Value != null)
+                    //if (nodes.ElementAt(0) != null && nodes.ElementAt(0).Value != null)
+                    if (e != null)
                     {
-                        description.Description = nodes.ElementAt(0).Value.Trim();
+                        //description.Description = nodes.ElementAt(0).Value.Trim();
+                        description.Description = e.Value.Trim();
                     }
                     if (e.Attribute("format") != null)
                     {
@@ -344,15 +346,15 @@ namespace ZigBeeNet.CodeGenerator.Xml
                     e = node;
                     for (int temp = 0; temp < nodes.Count(); temp++)
                     {
-                        if (nodes.ElementAt(temp).Name.Equals("field"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("field"))
                         {
                             condition.Field = nodes.ElementAt(temp).Value.Trim();
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("operator"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("operator"))
                         {
                             condition.Operator = nodes.ElementAt(temp).Value.Trim();
                         }
-                        if (nodes.ElementAt(temp).Name.Equals("value"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("value"))
                         {
                             condition.Value = nodes.ElementAt(temp).Value.Trim();
                         }
@@ -369,7 +371,7 @@ namespace ZigBeeNet.CodeGenerator.Xml
 
                     for (int temp = 0; temp < nodes.Count(); temp++)
                     {
-                        if (nodes.ElementAt(temp).Name.Equals("matcher"))
+                        if (nodes.ElementAt(temp).Name.LocalName.Equals("matcher"))
                         {
                             response.Matchers.Add((ZigBeeXmlMatcher)ProcessNode(nodes.ElementAt(temp)));
                         }
