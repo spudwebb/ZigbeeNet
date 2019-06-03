@@ -17,7 +17,7 @@ using ZigBeeNet.ZCL;
 
 namespace ZigBeeNet.Hardware.TI.CC2531.Network
 {
-    public class NetworkManager
+    public class NetworkManager : IAsynchronousCommandListener
     {
         private const int DEFAULT_TIMEOUT = 8000;
         private const string TIMEOUT_KEY = "zigbee.driver.cc2531.timeout";
@@ -77,14 +77,14 @@ namespace ZigBeeNet.Hardware.TI.CC2531.Network
 
         private static ManualResetEventSlim _hardwareSync = new ManualResetEventSlim(false);
 
+        public event EventHandler<DriverStatus> OnStateChanged;
+        
         private byte[] _ep;
         private byte[] _prof;
         private byte[] _dev;
         private byte[] _ver;
         private ushort[][] _inp;
         private ushort[][] _out;
-
-        private NetworkStateListener _announceListenerFilter = new NetworkStateListener();
 
         private List<IApplicationFrameworkMessageListener> _messageListeners = new List<IApplicationFrameworkMessageListener>();
         private AFMessageListenerFilter _afMessageListenerFilter;
@@ -97,9 +97,8 @@ namespace ZigBeeNet.Hardware.TI.CC2531.Network
         private object _hardwareWaitSync = new object();
         private object _networkSync = new object();
 
-        public NetworkManager(ICommandInterface commandInterface, NetworkMode mode, long timeout)
+        public NetworkManager(ICommandInterface commandInterface, NetworkMode mode)
         {
-            _announceListenerFilter.OnStateChanged += (object sender, DriverStatus status) => SetState(status);
             _afMessageListenerFilter = new AFMessageListenerFilter(_messageListeners);
 
             _mode = mode;
@@ -111,6 +110,29 @@ namespace ZigBeeNet.Hardware.TI.CC2531.Network
             ResendOnlyException = RESEND_ONLY_EXCEPTION_DEFAULT;
 
             _state = DriverStatus.CLOSED;
+        }
+
+        public void ReceivedAsynchronousCommand(ZToolPacket packet)
+        {
+            if (packet is ZDO_STATE_CHANGE_IND stateInd)
+            {
+                switch (stateInd.Status)
+                {
+                    case DeviceState.Started_as_ZigBee_Coordinator:
+                        Log.Debug("Started as Zigbee Coordinator");
+                        SetState(DriverStatus.NETWORK_READY);
+                        OnStateChanged?.Invoke(this, DriverStatus.NETWORK_READY);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        public void ReceivedUnclaimedSynchronousCommandResponse(ZToolPacket packet)
+        {
+            // Processing not requiered
+            throw new NotImplementedException(); // TODO: Realy throwing an exception ?
         }
 
         /// <summary>
@@ -424,7 +446,7 @@ namespace ZigBeeNet.Hardware.TI.CC2531.Network
             _commandInterface.AddAsynchronousCommandListener(_afMessageListenerFilter);
             //}
             // if (!announceListeners.contains(announceListenerFilter)) {
-            _commandInterface.AddAsynchronousCommandListener(_announceListenerFilter);
+            _commandInterface.AddAsynchronousCommandListener(this);
             // }
         }
 

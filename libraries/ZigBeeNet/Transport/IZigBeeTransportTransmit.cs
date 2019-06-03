@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using ZigBeeNet.Security;
 using ZigBeeNet.ZCL;
 
@@ -28,7 +29,7 @@ namespace ZigBeeNet.Transport
         /// </summary>
         /// <param name="reinitialize"></param>
         /// <returns>true if startup was success</returns>
-        ZigBeeStatus Startup(bool reinitialize);
+        Task<ZigBeeStatus> Startup(bool reinitialize);
 
         /// <summary>
         /// Shuts down a transport interface.

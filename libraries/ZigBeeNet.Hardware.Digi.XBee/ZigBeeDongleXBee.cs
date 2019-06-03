@@ -8,6 +8,7 @@ using ZigBeeNet.Hardware.Digi.XBee.Internal;
 using ZigBeeNet.Hardware.Digi.XBee.Internal.Protocol;
 using ZigBeeNet.Security;
 using ZigBeeNet.Transport;
+using System.Threading.Tasks;
 
 namespace ZigBeeNet.Hardware.Digi.XBee
 {
@@ -199,7 +200,7 @@ namespace ZigBeeNet.Hardware.Digi.XBee
             return ZigBeeStatus.SUCCESS;
         }
 
-        public ZigBeeStatus Startup(bool reinitialize)
+        public async Task<ZigBeeStatus> Startup(bool reinitialize)
         {
             Log.Debug("XBee dongle startup.");
 

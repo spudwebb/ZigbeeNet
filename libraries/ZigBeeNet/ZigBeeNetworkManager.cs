@@ -470,7 +470,7 @@ namespace ZigBeeNet
         ///            
         /// <returns><see cref="ZigBeeStatus"> with the status of function</returns>
         /// </summary>
-        public ZigBeeStatus Startup(bool reinitialize)
+        public async Task<ZigBeeStatus> Startup(bool reinitialize)
         {
             lock (_networkStateSync)
             {
@@ -480,7 +480,7 @@ namespace ZigBeeNet
                 }
             }
 
-            ZigBeeStatus status = Transport.Startup(reinitialize);
+            ZigBeeStatus status = await Transport.Startup(reinitialize);
 
             if (status != ZigBeeStatus.SUCCESS)
             {

@@ -13,6 +13,7 @@ using ZigBeeNet.Security;
 using ZigBeeNet.Transport;
 using ZigBeeNet.ZCL;
 using static ZigBeeNet.ZigBeeNetworkManager;
+using System.Threading.Tasks;
 
 namespace ZigBeeNet.Hardware.TI.CC2531
 {
@@ -26,6 +27,8 @@ namespace ZigBeeNet.Hardware.TI.CC2531
 
         private List<ushort> _supportedInputClusters = new List<ushort>();
         private List<ushort> _supportedOutputClusters = new List<ushort>();
+
+        private TaskCompletionSource<ZigBeeStatus> _startupTask;
 
         public string VersionString { get; set; }
 
@@ -76,7 +79,18 @@ namespace ZigBeeNet.Hardware.TI.CC2531
 
         public ZigBeeDongleTiCc2531(IZigBeePort serialPort)
         {
-            _networkManager = new NetworkManager(new CommandInterfaceImpl(serialPort), NetworkMode.Coordinator, 2500);
+            _networkManager = new NetworkManager(new CommandInterfaceImpl(serialPort), NetworkMode.Coordinator);
+            _networkManager.OnStateChanged += NetworkManager_OnStateChanged;
+        }
+
+        private void NetworkManager_OnStateChanged(object sender, DriverStatus e)
+        {
+            if (e == DriverStatus.NETWORK_READY)
+            {
+                CreateEndpoint(1, 0x104);
+
+                _startupTask?.SetResult(ZigBeeStatus.SUCCESS);
+            }
         }
 
         public void SetMagicNumber(byte magicNumber)
@@ -216,7 +230,7 @@ namespace ZigBeeNet.Hardware.TI.CC2531
             _networkManager.Shutdown();
         }
 
-        public ZigBeeStatus Startup(bool reinitialize)
+        public async Task<ZigBeeStatus> Startup(bool reinitialize)
         {
             Log.Debug("CC2531 transport startup");
 
@@ -229,25 +243,43 @@ namespace ZigBeeNet.Hardware.TI.CC2531
                 return ZigBeeStatus.INVALID_STATE;
             }
 
-            // TODO: ugly ugly ugly
-            // See: https://github.com/zigbeenet/ZigbeeNet/issues/46
-            while (true)
-            {
-                if (_networkManager.GetDriverStatus() == DriverStatus.NETWORK_READY)
-                {
-                    break;
-                }
-                if (_networkManager.GetDriverStatus() == DriverStatus.CLOSED)
-                {
-                    return ZigBeeStatus.BAD_RESPONSE;
-                }
+            _startupTask = new TaskCompletionSource<ZigBeeStatus>();
 
-                Thread.Sleep(50);
+            var t = _startupTask.Task;
+            var timeoutTask = Task.Delay(10000);
+
+            if (t == await Task.WhenAny(t, timeoutTask).ConfigureAwait(false))
+            {
+                return ZigBeeStatus.SUCCESS;
+            }
+            else
+            {
+                /* Timeout */
+                Log.Debug("Startup timeout");
+
+                return ZigBeeStatus.BAD_RESPONSE;
             }
 
-            CreateEndpoint(1, 0x104);
 
-            return ZigBeeStatus.SUCCESS;
+            //// TODO: ugly ugly ugly
+            //// See: https://github.com/zigbeenet/ZigbeeNet/issues/46
+            //while (true)
+            //{
+            //    if (_networkManager.GetDriverStatus() == DriverStatus.NETWORK_READY)
+            //    {
+            //        break;
+            //    }
+            //    if (_networkManager.GetDriverStatus() == DriverStatus.CLOSED)
+            //    {
+            //        return ZigBeeStatus.BAD_RESPONSE;
+            //    }
+
+            //    Thread.Sleep(50);
+            //}
+
+            //CreateEndpoint(1, 0x104);
+
+            //return ZigBeeStatus.SUCCESS;
         }
 
         private byte GetSendingEndpoint(ushort profileId)

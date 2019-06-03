@@ -112,7 +112,7 @@ namespace ZigBeeNet.PlayGround
                     ((ZigBeeDongleTiCc2531)dongle).SetLedMode(2, false); // red led
                 }
 
-                ZigBeeStatus startupSucceded = networkManager.Startup(false);
+                ZigBeeStatus startupSucceded = await networkManager.Startup(false);
 
                 if (startupSucceded == ZigBeeStatus.SUCCESS)
                 {
