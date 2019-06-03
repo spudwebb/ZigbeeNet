@@ -49,7 +49,8 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 				{ "BOOLEAN", new DataTypeMap("bool", 0x10, 1, false, 0xff) },
 				{ "SIGNED_8_BIT_INTEGER", new DataTypeMap("sbyte", 0x28, 1, true, 0x80) },
 				{ "SIGNED_16_BIT_INTEGER", new DataTypeMap("short", 0x29, 2, true, 0x8000) },
-				{ "SIGNED_32_BIT_INTEGER", new DataTypeMap("int", 0x2b, 4, true, 0x80000000) },
+                { "SIGNED_24_BIT_INTEGER", new DataTypeMap("int", 0x2a, 3, true, 0x800000) },
+                { "SIGNED_32_BIT_INTEGER", new DataTypeMap("int", 0x2b, 4, true, 0x80000000) },
 				{ "UNSIGNED_8_BIT_INTEGER", new DataTypeMap("byte", 0x20, 1, true, 0xff) },
 				{ "UNSIGNED_16_BIT_INTEGER", new DataTypeMap("ushort", 0x21, 2, true, 0xffff) },
 				{ "UNSIGNED_24_BIT_INTEGER", new DataTypeMap("uint", 0x22, 3, true, 0xffffff) },
@@ -59,9 +60,14 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 { "BITMAP_8_BIT", new DataTypeMap("byte", 0x18, 1, false) },
 				{ "BITMAP_16_BIT", new DataTypeMap("ushort", 0x19, 2, false) },
 				{ "BITMAP_24_BIT", new DataTypeMap("int", 0x1a, 3, false) },
+                { "BITMAP_40_BIT", new DataTypeMap("Integer", 0x1c, 5, false) },
+                { "BITMAP_48_BIT", new DataTypeMap("Integer", 0x1d, 6, false) },
 				{ "BITMAP_32_BIT", new DataTypeMap("int", 0x1b, 4, false) },
+                { "BITMAP_64_BIT", new DataTypeMap("Integer", 0x1f, 8, false) },
 				{ "ENUMERATION_16_BIT", new DataTypeMap("ushort", 0x31, 2, false, 0xffff) },
 				{ "ENUMERATION_8_BIT", new DataTypeMap("byte", 0x30, 1, false, 0xff) },
+                { "ENUMERATION_32_BIT", new DataTypeMap("int", 0x33, 4, false, 0xffffffff) },
+                { "FLOAT_32_BIT", new DataTypeMap("double", 0x39, 4, true) },
 				{ "DATA_8_BIT", new DataTypeMap("byte", 0x08, 1, false) },
 				{ "OCTET_STRING", new DataTypeMap("ByteArray", 0x41, -1, false) },
 				{ "UTCTIME", new DataTypeMap("DateTime", 0xe2, 4, true, 0xffffffff) },
@@ -72,6 +78,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 				{ "BINDING_TABLE", new DataTypeMap("BindingTable", 0, 0, false) },
 				{ "N_X_BINDING_TABLE", new DataTypeMap("List<BindingTable>", 0, 0, false) },
 				{ "BYTE_ARRAY", new DataTypeMap("ByteArray", 0, 0, false) },
+                { "RAW_OCTET", new DataTypeMap("ByteArray", 0, 0, false) },
 				{ "IMAGE_UPGRADE_STATUS", new DataTypeMap("ImageUpgradeStatus", 0, 0, false) }
 			};
 		}

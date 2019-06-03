@@ -17,7 +17,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             {
                 try
                 {
-                    GenerateZclClusterCommands(cluster, packageRoot, new FileStream(_sourceRootPath, FileMode.Open));
+                    GenerateZclClusterCommands(cluster, packageRoot);
                 }
                 catch (IOException e)
                 {
@@ -27,14 +27,14 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             }
         }
 
-        private void GenerateZclClusterCommands(ZigBeeXmlCluster cluster, string packageRootPrefix, FileStream sourceRootPath)
+        private void GenerateZclClusterCommands(ZigBeeXmlCluster cluster, string packageRootPrefix)
         {
 
             foreach (ZigBeeXmlCommand command in cluster.Commands)
             {
                 string packageRoot = GetZclClusterCommandPackage(cluster);
-                string packagePath = GetPackagePath(sourceRootPath, packageRoot);
-                FileStream packageFile = GetPackageFile(packagePath);
+                string packagePath = GetPackagePath(_sourceRootPath, packageRoot);
+                string packageFile = GetPackageFilePath(packagePath);
 
                 string className = StringToUpperCamelCase(command.Name);
                 TextWriter @out = GetClassOut(packageFile, className);

@@ -405,7 +405,15 @@ namespace ZigBeeNet.CodeGenerator.Xml
             {
                 if (lwrValue.StartsWith("0x"))
                 {
-                    return BigInteger.Parse(lwrValue.Substring(2), System.Globalization.NumberStyles.HexNumber);
+                    var tmp = lwrValue.Substring(2);
+
+                    if (tmp.StartsWith("-"))
+                    {
+                        var unSigned = BigInteger.Parse(tmp.Substring(1), System.Globalization.NumberStyles.HexNumber);
+                        return BigInteger.Negate(unSigned);
+                    }
+
+                    return BigInteger.Parse(tmp, System.Globalization.NumberStyles.HexNumber);
                 }
                 else
                 {

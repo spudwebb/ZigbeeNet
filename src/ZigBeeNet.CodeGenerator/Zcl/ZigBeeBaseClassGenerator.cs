@@ -13,7 +13,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
         protected Dictionary<string, string> _dependencies;
 
         protected int _lineLen = 80;
-        protected string _sourceRootPath = "target/src/main/java/";
+        protected string _sourceRootPath = @"C:\temp\java";
         protected List<string> _importList = new List<string>();
 
         protected static string packageRoot = "com.zsmartsystems.zigbee";
@@ -143,13 +143,13 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             value = value.Replace(".", "_");
             value = value.Replace("/", "_");
             value = value.Replace("#", "_");
-            value = value.Replace("_+", "_");
-            string[] parts = value.Split("_"); //ReplaceAll(Regex) ??
+            value = Regex.Replace(value, "_+", "_");
+            string[] parts = value.Split("_", StringSplitOptions.RemoveEmptyEntries);
             string camelCaseString = "";
 
             foreach (string part in parts)
             {
-                camelCaseString = camelCaseString + ToProperCase(part);
+                camelCaseString += ToProperCase(part);
             }
 
             return camelCaseString;
@@ -177,11 +177,11 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             return val.Substring(0, 1).ToLower() + val.Substring(1);
         }
 
-        protected TextWriter GetClassOut(FileStream packageFile, string className)
+        protected TextWriter GetClassOut(string packageFilePath, string className)
         {
             //Directory.CreateDirectory(packageFile.)
             //packageFile.mkdirs();
-            FileStream classFile = File.Create(packageFile.Name + Path.DirectorySeparatorChar.ToString() + className + ".cs");
+            FileStream classFile = File.Create(packageFilePath + Path.DirectorySeparatorChar.ToString() + className + ".cs");
             Console.WriteLine("Generating: " + classFile.Name);
             //FileOutputStream fileOutputStream = new FileOutputStream(classFile, false);
             return new StreamWriter(classFile);
@@ -334,40 +334,11 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
         protected void OutputLicense(TextWriter @out)
         {
-            string year = "XXXX";
-
-            StreamReader br;
             try
             {
-                br = new StreamReader(new FileStream("../pom.xml", FileMode.Open));
-                string line = br.ReadLine();
-
-                while (line != null)
-                {
-                    if (line.Contains("<license.year>") && line.Contains("</license.year>"))
-                    {
-                        year = line.Substring(line.IndexOf("<license.year>") + 14, line.IndexOf("</license.year>"));
-                        break;
-                    }
-                    line = br.ReadLine();
-                }
-
-                br.Close();
-
-                br = new StreamReader(new FileStream("../src/etc/header.txt", FileMode.Open));
-                line = br.ReadLine();
-
                 @out.WriteLine("/**");
-
-                while (line != null)
-                {
-                    var newLine = ReplaceFirst(line, "\\$\\{year\\}", year);
-                    @out.WriteLine(" * " + newLine);
-                    line = br.ReadLine();
-                }
-
+                @out.WriteLine(" * EPL");
                 @out.WriteLine(" */");
-                br.Close();
             }
             catch (FileNotFoundException e)
             {
@@ -381,19 +352,20 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             }
         }
 
-        protected FileStream GetPackageFile(string packagePath)
+        protected string GetPackageFilePath(string packagePath)
         {
             if (!File.Exists(packagePath))
             {
                 Directory.CreateDirectory(packagePath);
             }
 
-            return new FileStream(packagePath, FileMode.Open);
+            return packagePath;//new FileStream(packagePath, FileMode.Open);
         }
 
-        protected string GetPackagePath(FileStream sourceRootPath, string packageRoot)
+        protected string GetPackagePath(string sourceRootPath, string packageRoot)
         {
-            return sourceRootPath.Name + Path.DirectorySeparatorChar.ToString() + packageRoot.Replace(".", Path.DirectorySeparatorChar.ToString());
+            // TODO: use Path.Combine()
+            return sourceRootPath + Path.DirectorySeparatorChar.ToString() + packageRoot.Replace(".", Path.DirectorySeparatorChar.ToString());
         }
 
         protected void OutputClassGenerated(TextWriter @out)
@@ -499,7 +471,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 return ZclDataType.Mapping[attribute.Type].DataClass;
             }
 
-            if (_dependencies.ContainsKey(attribute.ImplementationClass))
+            if (attribute.ImplementationClass != null && _dependencies.ContainsKey(attribute.ImplementationClass))
             {
                 // importsAdd(dependencies.get(type));
                 return attribute.ImplementationClass;
@@ -516,7 +488,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             string dataType = "";
 
             // if (field.implementationClass.isEmpty()) {
-            if (ZclDataType.Mapping.ContainsKey(field.Type))
+            if (field.Type != null && ZclDataType.Mapping.ContainsKey(field.Type))
             {
                 dataType = ZclDataType.Mapping[field.Type].DataClass;
             }
@@ -561,7 +533,11 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             if (type.StartsWith("List"))
             {
                 ImportsAdd("java.util.List");
-                typeName = typeName.Substring(typeName.IndexOf("<") + 1, typeName.IndexOf(">"));
+
+                var startIndex = typeName.IndexOf("<") + 1;
+                var length = typeName.IndexOf(">") - startIndex;
+
+                typeName = typeName.Substring(startIndex, length);
             }
 
             if (standardTypes.Contains(typeName))

@@ -23,7 +23,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
                 try
                 {
-                    GenerateZclClusterClasses(cluster, packageRoot, new FileStream(_sourceRootPath, FileMode.Open));
+                    GenerateZclClusterClasses(cluster, packageRoot);
                 }
                 catch (IOException e)
                 {
@@ -33,12 +33,11 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             }
         }
 
-        private void GenerateZclClusterClasses(ZigBeeXmlCluster cluster, string packageRootPrefix, FileStream sourceRootPath)
+        private void GenerateZclClusterClasses(ZigBeeXmlCluster cluster, string packageRootPrefix)
         {
-
             string packageRoot = packageRootPrefix;
-            string packagePath = GetPackagePath(sourceRootPath, packageRoot);
-            FileStream packageFile = GetPackageFile(packagePath + (packageZclCluster).Replace('.', '/'));
+            string packagePath = GetPackagePath(_sourceRootPath, packageRoot);
+            string packageFile = GetPackageFilePath(packagePath + (packageZclCluster).Replace('.', '/'));
 
             String className = "Zcl" + StringToUpperCamelCase(cluster.Name) + "Cluster";
             TextWriter @out = GetClassOut(packageFile, className);

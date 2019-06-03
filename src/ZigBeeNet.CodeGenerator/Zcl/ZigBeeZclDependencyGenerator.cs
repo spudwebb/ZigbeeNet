@@ -12,6 +12,8 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
         public ZigBeeZclDependencyGenerator(List<ZigBeeXmlCluster> clusters)
         {
+            _dependencies = new Dictionary<string, string>();
+
             foreach (ZigBeeXmlCluster cluster in clusters)
             {
                 try

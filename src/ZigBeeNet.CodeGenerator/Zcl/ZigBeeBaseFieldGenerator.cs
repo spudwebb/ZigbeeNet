@@ -189,8 +189,10 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
                     if (field.Sizer != null)
                     {
-                        string dataType = GetDataTypeClass(field).Substring(GetDataTypeClass(field).IndexOf('<') + 1,
-                                GetDataTypeClass(field).IndexOf('>'));
+                        var startIndex = GetDataTypeClass(field).IndexOf('<') + 1;
+                        var length = GetDataTypeClass(field).IndexOf('>') - startIndex;
+
+                        string dataType = GetDataTypeClass(field).Substring(startIndex, length);
 
                         @out.WriteLine("        if (" + field.Sizer + " != null) {");
                         @out.WriteLine("            for (int cnt = 0; cnt < " + field.Sizer + "; cnt++) {");
