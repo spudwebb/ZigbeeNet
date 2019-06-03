@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using ZigBeeNet.ZCL.Protocol;
 
 namespace ZigBeeNet.ZCL
 {
     public abstract class ZclCommand : ZigBeeCommand
     {
-
         /// <summary>
         /// True if this is a generic command
         /// </summary>
-        public bool GenericCommand { get; set; }
+        internal bool GenericCommand { get; set; }
 
         /// <summary>
         /// The command ID
         /// </summary>
-        public byte CommandId { get; set; }
+        internal byte CommandId { get; set; }
 
         /// <summary>
         /// The manufacturer code; this value needs to be set for manufacturer-specific commands. If this value is null, then
@@ -37,7 +33,7 @@ namespace ZigBeeNet.ZCL
         /// If this command is to be sent to the server, this will return true.
         /// If this command is to be sent from the server, this will return false.
         /// </summary>
-        public ZclCommandDirection CommandDirection { get; set; }
+        internal ZclCommandDirection CommandDirection { get; set; }
 
 
         /// <summary>
