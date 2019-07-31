@@ -44,37 +44,46 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
                 ImportsClear();
 
-                foreach (ZigBeeXmlField field in command.Fields)
-                {
-                    if (GetDataTypeClass(field).StartsWith("List"))
-                    {
-                        ImportsAdd("java.util.List");
-                    }
+                //foreach (ZigBeeXmlField field in command.Fields)
+                //{
+                //    if (GetDataTypeClass(field).StartsWith("List"))
+                //    {
+                //        ImportsAdd("java.util.List");
+                //    }
 
-                    if (field.Sizer != null)
-                    {
-                        ImportsAdd("java.util.ArrayList");
-                    }
-                }
+                //    if (field.Sizer != null)
+                //    {
+                //        ImportsAdd("java.util.ArrayList");
+                //    }
+                //}
+
+                ImportsAdd("using System;");
+                ImportsAdd("using System.Collections.Generic;");
+                ImportsAdd("using System.Linq;");
+                ImportsAdd("using System.Text;");
+                ImportsAdd("using ZigBeeNet.ZCL.Protocol;");
+                ImportsAdd("using ZigBeeNet.ZCL.Field;");
+                ImportsAdd("using ZigBeeNet.ZCL.Clusters." + cluster.Name.Replace("/", "").Replace(" ", "").Replace("(", "").Replace(")", "") + ";");
+
                 OutputLicense(@out);
 
-                @out.WriteLine("package " + packageRoot + ";");
+                //@out.WriteLine("package " + packageRoot + ";");
                 @out.WriteLine();
-                ImportsAdd("javax.annotation.Generated");
+                //ImportsAdd("javax.annotation.Generated");
 
-                if (command.Response != null)
-                {
-                    ImportsAdd(packageRootPrefix + ".transaction.ZigBeeTransactionMatcher");
-                    ImportsAdd(packageRootPrefix + ".ZigBeeCommand");
+                //if (command.Response != null)
+                //{
+                //    ImportsAdd(packageRootPrefix + ".transaction.ZigBeeTransactionMatcher");
+                //    ImportsAdd(packageRootPrefix + ".ZigBeeCommand");
 
-                    ImportsAdd(packageRoot + "." + command.Response.Command);
-                }
+                //    ImportsAdd(packageRoot + "." + command.Response.Command);
+                //}
 
                 string commandExtends = "";
                 if (packageRoot.Contains(".zcl."))
                 {
-                    ImportsAdd(packageRootPrefix + packageZcl + ".ZclCommand");
-                    ImportsAdd(packageRootPrefix + packageZclProtocol + ".ZclCommandDirection");
+                    //ImportsAdd(packageRootPrefix + packageZcl + ".ZclCommand");
+                    //ImportsAdd(packageRootPrefix + packageZclProtocol + ".ZclCommandDirection");
                     commandExtends = "ZclCommand";
                 }
                 else
@@ -88,24 +97,24 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                     {
                         commandExtends = "ZdoRequest";
                     }
-                    ImportsAdd(packageRootPrefix + packageZdp + "." + commandExtends);
+                    //mportsAdd(packageRootPrefix + packageZdp + "." + commandExtends);
                 }
 
-                if (command.Fields.Count > 0)
-                {
-                    ImportsAdd(packageRootPrefix + packageZcl + ".ZclFieldSerializer");
-                    ImportsAdd(packageRootPrefix + packageZcl + ".ZclFieldDeserializer");
-                    ImportsAdd(packageRootPrefix + packageZclProtocol + ".ZclDataType");
-                }
+                //if (command.Fields.Count > 0)
+                //{
+                //    ImportsAdd(packageRootPrefix + packageZcl + ".ZclFieldSerializer");
+                //    ImportsAdd(packageRootPrefix + packageZcl + ".ZclFieldDeserializer");
+                //    ImportsAdd(packageRootPrefix + packageZclProtocol + ".ZclDataType");
+                //}
 
-                foreach (ZigBeeXmlField field in command.Fields)
-                {
-                    ImportsAddClass(field);
-                }
+                //foreach (ZigBeeXmlField field in command.Fields)
+                //{
+                //    ImportsAddClass(field);
+                //}
 
-                OutputImports(@out);
+                //OutputImports(@out);
 
-                @out.WriteLine();
+                //@out.WriteLine();
                 @out.WriteLine("/**");
                 @out.WriteLine(" * " + command.Name + " value object class.");
 
@@ -130,7 +139,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 @out.WriteLine(" * Code is auto-generated. Modifications may be overwritten!");
                 @out.WriteLine(" */");
                 OutputClassGenerated(@out);
-                @out.Write("public class " + className + " extends " + commandExtends);
+                @out.Write("public class " + className + " : " + commandExtends);
                 if (command.Response != null)
                 {
                     @out.Write(" implements ZigBeeTransactionMatcher");
@@ -215,7 +224,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                     @out.WriteLine("     * @param clusterId the cluster ID used for generic commands as an {@link Integer}");
                     @out.WriteLine("     */");
                     //@out.WriteLine("    @Override");
-                    @out.WriteLine("    public oberride void SetClusterId(ushort clusterId) {");
+                    @out.WriteLine("    public override void SetClusterId(ushort clusterId) {");
                     @out.WriteLine("        this.clusterId = clusterId;");
                     @out.WriteLine("    }");
                 }

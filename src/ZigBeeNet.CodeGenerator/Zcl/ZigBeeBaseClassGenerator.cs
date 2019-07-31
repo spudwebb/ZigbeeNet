@@ -206,51 +206,57 @@ namespace ZigBeeNet.CodeGenerator.Zcl
         {
             _importList.Sort();
 
-            bool found = false;
-
-            foreach (string importClass in _importList)
+            foreach (var item in _importList)
             {
-                if (!importClass.StartsWith("java."))
-                {
-                    continue;
-                }
-
-                found = true;
-
-                @out.WriteLine("import " + importClass + ";");
+                @out.WriteLine("using " + item);
             }
 
-            if (found)
-            {
-                @out.WriteLine();
-                found = false;
-            }
+            @out.WriteLine();
+            //bool found = false;
 
-            foreach (string importClass in _importList)
-            {
-                if (!importClass.StartsWith("javax."))
-                {
-                    continue;
-                }
-                found = true;
-                @out.WriteLine("import " + importClass + ";");
-            }
+            //foreach (string importClass in _importList)
+            //{
+            //    if (!importClass.StartsWith("java."))
+            //    {
+            //        continue;
+            //    }
 
-            if (found)
-            {
-                @out.WriteLine();
-                found = false;
-            }
+            //    found = true;
 
-            foreach (string importClass in _importList)
-            {
-                if (importClass.StartsWith("java.") || importClass.StartsWith("javax."))
-                {
-                    continue;
-                }
+            //    @out.WriteLine("import " + importClass + ";");
+            //}
 
-                @out.WriteLine("import " + importClass + ";");
-            }
+            //if (found)
+            //{
+            //    @out.WriteLine();
+            //    found = false;
+            //}
+
+            //foreach (string importClass in _importList)
+            //{
+            //    if (!importClass.StartsWith("javax."))
+            //    {
+            //        continue;
+            //    }
+            //    found = true;
+            //    @out.WriteLine("import " + importClass + ";");
+            //}
+
+            //if (found)
+            //{
+            //    @out.WriteLine();
+            //    found = false;
+            //}
+
+            //foreach (string importClass in _importList)
+            //{
+            //    if (importClass.StartsWith("java.") || importClass.StartsWith("javax."))
+            //    {
+            //        continue;
+            //    }
+
+            //    @out.WriteLine("import " + importClass + ";");
+            //}
         }
 
         protected void OutputWithLinebreak(TextWriter @out, string indent, List<ZigBeeXmlDescription> descriptions)

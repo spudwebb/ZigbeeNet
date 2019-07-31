@@ -88,7 +88,6 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                     _zclTypes.Add(attribute.Type);
                 }
             }
-
         }
 
         public Dictionary<string, string> GetDependencyMap()

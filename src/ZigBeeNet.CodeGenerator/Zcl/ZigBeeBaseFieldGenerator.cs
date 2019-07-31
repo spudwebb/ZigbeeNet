@@ -35,13 +35,13 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 @out.WriteLine("     * Gets " + field.Name + ".");
                 if (field.Description.Count != 0)
                 {
-                    @out.WriteLine("     * <p>");
+                    @out.WriteLine("     * ");
                     OutputWithLinebreak(@out, "    ", field.Description);
                 }
                 @out.WriteLine("     *");
                 @out.WriteLine("     * @return the " + field.Name);
                 @out.WriteLine("     */");
-                @out.WriteLine("    public " + GetDataTypeClass(field) + " get" + StringToUpperCamelCase(field.Name) + "() {");
+                @out.WriteLine("    public " + GetDataTypeClass(field) + " Get" + StringToUpperCamelCase(field.Name) + "() {");
                 @out.WriteLine("        return " + StringToLowerCamelCase(field.Name) + ";");
                 @out.WriteLine("    }");
                 @out.WriteLine();
@@ -49,7 +49,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 @out.WriteLine("     * Sets " + field.Name + ".");
                 if (field.Description.Count != 0)
                 {
-                    @out.WriteLine("     * <p>");
+                    @out.WriteLine("     * ");
                     OutputWithLinebreak(@out, "    ", field.Description);
                 }
                 @out.WriteLine("     *");
@@ -66,11 +66,11 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             if (fields.Count > 0)
             {
                 @out.WriteLine();
-                @out.WriteLine("    @Override");
-                @out.WriteLine("    public void serialize( ZclFieldSerializer serializer) {");
+                //@out.WriteLine("    @Override");
+                @out.WriteLine("    public override void Serialize(ZclFieldSerializer serializer) {");
                 if (parentClass.StartsWith("Zdo"))
                 {
-                    @out.WriteLine("        super.serialize(serializer);");
+                    @out.WriteLine("        base.Serialize(serializer);");
                     @out.WriteLine();
                 }
 
@@ -87,7 +87,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                     {
                         ZigBeeXmlField sizedField = GetAutoSized(fields, StringToLowerCamelCase(field.Name));
                         @out.WriteLine("        serializer.serialize(" + StringToLowerCamelCase(sizedField.Name)
-                                + ".size(), ZclDataType." + field.Type + ");");
+                                + ".Count(), ZclDataType." + field.Type + ");");
 
                         continue;
                     }
@@ -95,9 +95,9 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                     if (field.Sizer != null)
                     {
                         @out.WriteLine("        for (int cnt = 0; cnt < " + StringToLowerCamelCase(field.Name)
-                                + ".size(); cnt++) {");
+                                + ".Count(); cnt++) {");
                         @out.WriteLine("            serializer.serialize(" + StringToLowerCamelCase(field.Name)
-                                + ".get(cnt), ZclDataType." + field.Type + ");");
+                                + "[cnt], ZclDataType." + field.Type + ");");
                         @out.WriteLine("        }");
                     }
                     else if (field.Condition != null)
@@ -107,7 +107,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                             // Special case where a ZclStatus may be sent, or, a list of results.
                             // This checks for a single response
                             @out.WriteLine("        if (status == ZclStatus.SUCCESS) {");
-                            @out.WriteLine("            serializer.serialize(status, ZclDataType.ZCL_STATUS);");
+                            @out.WriteLine("            serializer.Serialize(status, ZclDataType.ZCL_STATUS);");
                             @out.WriteLine("            return;");
                             @out.WriteLine("        }");
                             continue;
@@ -122,7 +122,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                             @out.WriteLine("        if (" + field.Condition.Field + " " + GetOperator(field.Condition.Operator)
                                     + " " + field.Condition.Value + ") {");
                         }
-                        @out.WriteLine("            serializer.serialize(" + StringToLowerCamelCase(field.Name)
+                        @out.WriteLine("            serializer.Serialize(" + StringToLowerCamelCase(field.Name)
                                 + ", ZclDataType." + field.Type + ");");
                         @out.WriteLine("        }");
                     }
@@ -130,23 +130,23 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                     {
                         if (field.Type != null && !string.IsNullOrEmpty(field.Type))
                         {
-                            @out.WriteLine("        serializer.serialize(" + StringToLowerCamelCase(field.Name)
+                            @out.WriteLine("        serializer.Serialize(" + StringToLowerCamelCase(field.Name)
                                     + ", ZclDataType." + field.Type + ");");
                         }
                         else
                         {
-                            @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + ".serialize(serializer);");
+                            @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + ".Serialize(serializer);");
                         }
                     }
                 }
                 @out.WriteLine("    }");
 
                 @out.WriteLine();
-                @out.WriteLine("    @Override");
-                @out.WriteLine("    public void deserialize( ZclFieldDeserializer deserializer) {");
+                //@out.WriteLine("    @Override");
+                @out.WriteLine("    public overrid void Deserialize(ZclFieldDeserializer deserializer) {");
                 if (parentClass.StartsWith("Zdo"))
                 {
-                    @out.WriteLine("        super.deserialize(deserializer);");
+                    @out.WriteLine("        base.Deserialize(deserializer);");
                     @out.WriteLine();
                 }
                 bool first = true;
@@ -159,8 +159,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                             @out.WriteLine("        // Create lists");
                             first = false;
                         }
-                        @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + " = new Array"
-                                                    + GetDataTypeClass(field) + "();");
+                        @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + " = new Array"+ GetDataTypeClass(field) + "();");
                     }
                 }
                 if (first == false)
@@ -175,15 +174,15 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
                     if (field.CompleteOnZero)
                     {
-                        @out.WriteLine("        if (deserializer.isEndOfStream()) {");
+                        @out.WriteLine("        if (deserializer.IsEndOfStream()) {");
                         @out.WriteLine("            return;");
                         @out.WriteLine("        }");
                     }
                     if (GetAutoSized(fields, StringToLowerCamelCase(field.Name)) != null)
                     {
                         @out.WriteLine(
-                                "        Integer " + StringToLowerCamelCase(field.Name) + " = (" + GetDataTypeClass(field)
-                                        + ") deserializer.deserialize(" + "ZclDataType." + field.Type + ");");
+                                "        ushort " + StringToLowerCamelCase(field.Name) + " = (" + GetDataTypeClass(field)
+                                        + ") deserializer.Deserialize(ZclDataType." + field.Type + ");");
                         continue;
                     }
 
@@ -196,8 +195,8 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
                         @out.WriteLine("        if (" + field.Sizer + " != null) {");
                         @out.WriteLine("            for (int cnt = 0; cnt < " + field.Sizer + "; cnt++) {");
-                        @out.WriteLine("                " + StringToLowerCamelCase(field.Name) + ".add((" + dataType
-                                + ") deserializer.deserialize(" + "ZclDataType." + field.Type + "));");
+                        @out.WriteLine("                " + StringToLowerCamelCase(field.Name) + ".Add((" + dataType
+                                + ") deserializer.Deserialize(" + "ZclDataType." + field.Type + "));");
                         @out.WriteLine("            }");
                         @out.WriteLine("        }");
                     }
@@ -207,9 +206,9 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                         {
                             // Special case where a ZclStatus may be sent, or, a list of results.
                             // This checks for a single response
-                            @out.WriteLine("        if (deserializer.getRemainingLength() == 1) {");
+                            @out.WriteLine("        if (deserializer.GetRemainingLength() == 1) {");
                             @out.WriteLine(
-                                    "            status = (ZclStatus) deserializer.deserialize(ZclDataType.ZCL_STATUS);");
+                                    "            status = (ZclStatus) deserializer.Deserialize(ZclDataType.ZCL_STATUS);");
                             @out.WriteLine("            return;");
                             @out.WriteLine("        }");
                             continue;
@@ -225,7 +224,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                                     + " " + field.Condition.Value + ") {");
                         }
                         @out.WriteLine("            " + StringToLowerCamelCase(field.Name) + " = (" + GetDataTypeClass(field)
-                                + ") deserializer.deserialize(" + "ZclDataType." + field.Type + ");");
+                                + ") deserializer.Deserialize(" + "ZclDataType." + field.Type + ");");
                         @out.WriteLine("        }");
                     }
                     else
@@ -233,13 +232,13 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                         if (!string.IsNullOrEmpty(field.Type))
                         {
                             @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + " = (" + GetDataTypeClass(field)
-                                    + ") deserializer.deserialize(" + "ZclDataType." + field.Type + ");");
+                                    + ") deserializer.Deserialize(" + "ZclDataType." + field.Type + ");");
                         }
                         else
                         {
                             @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + " = new "
                                     + GetDataTypeClass(field) + "();");
-                            @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + ".deserialize(deserializer);");
+                            @out.WriteLine("        " + StringToLowerCamelCase(field.Name) + ".Deserialize(deserializer);");
                         }
                     }
 
@@ -264,13 +263,13 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             }
 
             @out.WriteLine();
-            @out.WriteLine("    @Override");
-            @out.WriteLine("    public String toString() {");
-            @out.WriteLine("        final StringBuilder builder = new StringBuilder(" + (className.Length + 3 + fieldLen)
+            //@out.WriteLine("    @Override");
+            @out.WriteLine("    public override string ToString() {");
+            @out.WriteLine("        StringBuilder builder = new StringBuilder(" + (className.Length + 3 + fieldLen)
                     + ");");
 
-            @out.WriteLine("        builder.append(\"" + className + " [\");");
-            @out.WriteLine("        builder.append(super.toString());");
+            @out.WriteLine("        builder.Append(\"" + className + " [\");");
+            @out.WriteLine("        builder.Append(base.ToString());");
             foreach (ZigBeeXmlField field in fields)
             {
                 // if (reservedFields.contains(stringToLowerCamelCase(field.name))) {
@@ -280,11 +279,11 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 {
                     continue;
                 }
-                @out.WriteLine("        builder.append(\", " + StringToLowerCamelCase(field.Name) + "=\");");
-                @out.WriteLine("        builder.append(" + StringToLowerCamelCase(field.Name) + ");");
+                @out.WriteLine("        builder.Append(\", " + StringToLowerCamelCase(field.Name) + "=\");");
+                @out.WriteLine("        builder.Append(" + StringToLowerCamelCase(field.Name) + ");");
             }
-            @out.WriteLine("        builder.append(\']\');");
-            @out.WriteLine("        return builder.toString();");
+            @out.WriteLine("        builder.Append(\']\');");
+            @out.WriteLine("        return builder.ToString();");
             @out.WriteLine("    }");
         }
 
