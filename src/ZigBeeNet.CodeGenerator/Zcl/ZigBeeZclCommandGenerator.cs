@@ -109,24 +109,24 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 @out.WriteLine("/**");
                 @out.WriteLine(" * " + command.Name + " value object class.");
 
-                @out.WriteLine(" * <p>");
+                @out.WriteLine(" * ");
                 if (packageRoot.Contains(".zcl."))
                 {
-                    @out.WriteLine(" * Cluster: <b>" + cluster.Name + "</b>. Command ID 0x"
-                            + command.Code.ToString("X2") + " is sent <b>"
-                            + (command.Source.Equals("client") ? "TO" : "FROM") + "</b> the server.");
+                    @out.WriteLine(" * Cluster: " + cluster.Name + ". Command ID 0x"
+                            + command.Code.ToString("X2") + " is sent "
+                            + (command.Source.Equals("client") ? "TO" : "FROM") + " the server.");
                     @out.WriteLine(" * This command is " + ((cluster.Name.Equals("GENERAL", StringComparison.InvariantCultureIgnoreCase))
-                            ? "a <b>generic</b> command used across the profile."
-                            : "a <b>specific</b> command used for the " + cluster.Name + " cluster."));
+                            ? "a generic command used across the profile."
+                            : "a specific command used for the " + cluster.Name + " cluster."));
                 }
 
                 if (command.Description.Count > 0)
                 {
-                    @out.WriteLine(" * <p>");
+                    @out.WriteLine(" * ");
                     OutputWithLinebreak(@out, "", command.Description);
                 }
 
-                @out.WriteLine(" * <p>");
+                @out.WriteLine(" * ");
                 @out.WriteLine(" * Code is auto-generated. Modifications may be overwritten!");
                 @out.WriteLine(" */");
                 OutputClassGenerated(@out);
@@ -144,13 +144,13 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                         @out.WriteLine("    /**");
                         @out.WriteLine("     * The cluster ID to which this command belongs.");
                         @out.WriteLine("     */");
-                        @out.WriteLine("    public static int CLUSTER_ID = 0x" + cluster.Code.ToString("X4") + ";");
+                        @out.WriteLine("    public static ushort CLUSTER_ID = 0x" + cluster.Code.ToString("X4") + ";");
                         @out.WriteLine();
                     }
                     @out.WriteLine("    /**");
                     @out.WriteLine("     * The command ID.");
                     @out.WriteLine("     */");
-                    @out.WriteLine("    public static int COMMAND_ID = 0x" + command.Code.ToString("X2") + ";");
+                    @out.WriteLine("    public static ushort COMMAND_ID = 0x" + command.Code.ToString("X2") + ";");
                     @out.WriteLine();
                 }
                 else
@@ -158,7 +158,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                     @out.WriteLine("    /**");
                     @out.WriteLine("     * The ZDO cluster ID.");
                     @out.WriteLine("     */");
-                    @out.WriteLine("    public static int CLUSTER_ID = 0x" + command.Code.ToString("X4") + ";");
+                    @out.WriteLine("    public static ushort CLUSTER_ID = 0x" + command.Code.ToString("X4") + ";");
                     @out.WriteLine();
                 }
 
@@ -177,7 +177,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                     @out.WriteLine("     * " + field.Name + " command message field.");
                     if (field.Description.Count != 0)
                     {
-                        @out.WriteLine("     * <p>");
+                        @out.WriteLine("     * ");
                         OutputWithLinebreak(@out, "    ", field.Description);
                     }
                     @out.WriteLine("     */");
@@ -207,19 +207,15 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 {
                     @out.WriteLine();
                     @out.WriteLine("    /**");
-                    @out.WriteLine("     * Sets the cluster ID for <i>generic</i> commands. {@link " + className
-                            + "} is a <i>generic</i> command.");
-                    @out.WriteLine("     * <p>");
-                    @out.WriteLine(
-                            "     * For commands that are not <i>generic</i>, this method will do nothing as the cluster ID is fixed.");
-                    @out.WriteLine("     * To test if a command is <i>generic</i>, use the {@link #isGenericCommand} method.");
+                    @out.WriteLine("     * Sets the cluster ID for generic commands." + className+ " is a generic command.");
+                    @out.WriteLine("     * ");
+                    @out.WriteLine("     * For commands that are not generic, this method will do nothing as the cluster ID is fixed.");
+                    @out.WriteLine("     * To test if a command is generic, use the {@link #isGenericCommand} method.");
                     @out.WriteLine("     *");
-                    @out.WriteLine(
-                            "     * @param clusterId the cluster ID used for <i>generic</i> commands as an {@link Integer}");
-
+                    @out.WriteLine("     * @param clusterId the cluster ID used for generic commands as an {@link Integer}");
                     @out.WriteLine("     */");
-                    @out.WriteLine("    @Override");
-                    @out.WriteLine("    public void setClusterId(Integer clusterId) {");
+                    //@out.WriteLine("    @Override");
+                    @out.WriteLine("    public oberride void SetClusterId(ushort clusterId) {");
                     @out.WriteLine("        this.clusterId = clusterId;");
                     @out.WriteLine("    }");
                 }
@@ -229,17 +225,17 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 if (command.Response != null)
                 {
                     @out.WriteLine();
-                    @out.WriteLine("    @Override");
-                    @out.WriteLine("    public boolean isTransactionMatch(ZigBeeCommand request, ZigBeeCommand response) {");
+                    //@out.WriteLine("    @Override");
+                    @out.WriteLine("    public override bool IsTransactionMatch(ZigBeeCommand request, ZigBeeCommand response) {");
                     if (command.Response.Matchers.Count == 0)
                     {
-                        @out.WriteLine("        return (response instanceof " + command.Response.Command + ")");
-                        @out.WriteLine("                && ((ZdoRequest) request).getDestinationAddress().equals((("
-                                + command.Response.Command + ") response).getSourceAddress());");
+                        @out.WriteLine("        return (response is " + command.Response.Command + ")");
+                        @out.WriteLine("                && ((ZdoRequest) request).GetDestinationAddress().Equals((("
+                                + command.Response.Command + ") response).GetSourceAddress());");
                     }
                     else
                     {
-                        @out.WriteLine("        if (!(response instanceof " + command.Response.Command + ")) {");
+                        @out.WriteLine("        if (!(response is " + command.Response.Command + ")) {");
                         @out.WriteLine("            return false;");
                         @out.WriteLine("        }");
                         @out.WriteLine();
@@ -256,7 +252,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                             first = false;
                             @out.WriteLine("(((" + StringToUpperCamelCase(command.Name) + ") request).get"
                                     + matcher.CommandField + "()");
-                            @out.Write("                .equals(((" + command.Response.Command + ") response).get"
+                            @out.Write("                .Equals(((" + command.Response.Command + ") response).get"
                                     + matcher.ResponseField + "()))");
                         }
                         @out.WriteLine(";");

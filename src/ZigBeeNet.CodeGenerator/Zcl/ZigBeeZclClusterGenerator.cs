@@ -44,7 +44,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
             OutputLicense(@out);
 
-            @out.WriteLine("package " + packageRoot + packageZclCluster + ";");
+            //@out.WriteLine("package " + packageRoot + packageZclCluster + ";");
             @out.WriteLine();
 
             ImportsClear();
@@ -131,14 +131,14 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
             @out.WriteLine();
             @out.WriteLine("/**");
-            @out.WriteLine(" * <b>" + cluster.Name + "</b> cluster implementation (<i>Cluster ID " + "0x" + cluster.Code.ToString("X4") + "</i>).");
+            @out.WriteLine(" * " + cluster.Name + " cluster implementation (Cluster ID " + "0x" + cluster.Code.ToString("X4") + ".");
             if (cluster.Description.Count != 0)
             {
-                @out.WriteLine(" * <p>");
+                @out.WriteLine(" * ");
                 OutputWithLinebreak(@out, "", cluster.Description);
             }
 
-            @out.WriteLine(" * <p>");
+            @out.WriteLine(" * ");
             @out.WriteLine(" * Code is auto-generated. Modifications may be overwritten!");
 
             @out.WriteLine(" */");
@@ -149,12 +149,12 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             @out.WriteLine("    /**");
             @out.WriteLine("     * The ZigBee Cluster Library Cluster ID");
             @out.WriteLine("     */");
-            @out.WriteLine("    public static final int CLUSTER_ID = 0x" + cluster.Code.ToString("X4"));
+            @out.WriteLine("    public const int CLUSTER_ID = 0x" + cluster.Code.ToString("X4"));
             @out.WriteLine();
             @out.WriteLine("    /**");
             @out.WriteLine("     * The ZigBee Cluster Library Cluster Name");
             @out.WriteLine("     */");
-            @out.WriteLine("    public static final String CLUSTER_NAME = \"" + cluster.Name + "\";");
+            @out.WriteLine("    public const string CLUSTER_NAME = \"" + cluster.Name + "\";");
             @out.WriteLine();
 
             if (cluster.Attributes.Count != 0)
@@ -176,7 +176,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                             }
 
                             String name = Regex.Replace(attribute.Name, "\\{\\{count\\}\\}", arrayCount.ToString()); //attribute.Name.replaceAll("\\{\\{count\\}\\}", arrayCount));
-                            @out.WriteLine("    public static final int " + GetEnum(name) + " = 0x" + (attribute.Code + arrayCount).Value.ToString("X4") + ";");
+                            @out.WriteLine("    public const int " + GetEnum(name) + " = 0x" + (attribute.Code + arrayCount).Value.ToString("X4") + ";");
                             arrayCount += arrayStep;
                         }
                     }
@@ -194,13 +194,13 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 @out.WriteLine();
             }
 
-            @out.WriteLine("    @Override");
-            @out.WriteLine("    protected Map<Integer, ZclAttribute> initializeClientAttributes() {");
+            //@out.WriteLine("    @Override");
+            @out.WriteLine("    protected override Dictionary<ushort, ZclAttribute> InitializeClientAttributes() {");
             CreateInitializeAttributes(@out, cluster.Name, attributesClient);
             @out.WriteLine();
 
-            @out.WriteLine("    @Override");
-            @out.WriteLine("    protected Map<Integer, ZclAttribute> initializeServerAttributes() {");
+            //@out.WriteLine("    @Override");
+            @out.WriteLine("    protected overrid Dictionary<ushort, ZclAttribute> InitializeServerAttributes() {");
             CreateInitializeAttributes(@out, cluster.Name, attributesServer);
             @out.WriteLine();
 
@@ -208,16 +208,16 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
             if (commandsServer != 0)
             {
-                @out.WriteLine("    @Override");
-                @out.WriteLine("    protected Map<Integer, Class<? extends ZclCommand>> initializeServerCommands() {");
-                @out.WriteLine("        Map<Integer, Class<? extends ZclCommand>> commandMap = new ConcurrentHashMap<>("
+                //@out.WriteLine("    @Override");
+                @out.WriteLine("    protected overrid ConcurrentDictionary<ushort, ZclCommand>> InitializeServerCommands() {");
+                @out.WriteLine("        ConcurrentDictionary<ushort, ZclCommand> commandMap = new ConcurrentDictionary<int, ZclCommand>("
                         + commandsServer + ");");
                 @out.WriteLine();
                 foreach (ZigBeeXmlCommand command in cluster.Commands)
                 {
                     if (command.Source.Equals("server", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        @out.WriteLine("        commandMap.put(0x" + command.Code.ToString("X4") + ", " + StringToUpperCamelCase(command.Name) + ".class);");
+                        @out.WriteLine("        commandMap.TryAdd(0x" + command.Code.ToString("X4") + ", " + StringToUpperCamelCase(command.Name) + ".class);");
                     }
                 }
                 @out.WriteLine();
@@ -229,9 +229,9 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
             if (commandsClient != 0)
             {
-                @out.WriteLine("    @Override");
-                @out.WriteLine("    protected Map<Integer, Class<? extends ZclCommand>> initializeClientCommands() {");
-                @out.WriteLine("        Map<Integer, Class<? extends ZclCommand>> commandMap = new ConcurrentHashMap<>(" + commandsClient + ");");
+                //@out.WriteLine("    @Override");
+                @out.WriteLine("    protected overrid ConcurrentDictionary<ushort, ZclCommand> InitializeClientCommands() {");
+                @out.WriteLine("        ConcurrentDictionary<ushort, ZclCommand> commandMap = new ConcurrentDictionary<>(" + commandsClient + ");");
                 @out.WriteLine();
                 foreach (ZigBeeXmlCommand command in cluster.Commands)
                 {
