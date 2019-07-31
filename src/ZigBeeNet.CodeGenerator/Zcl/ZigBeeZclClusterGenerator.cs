@@ -51,25 +51,25 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
             int commandsServer = 0;
             int commandsClient = 0;
-            foreach (ZigBeeXmlCommand command in cluster.Commands)
-            {
-                ImportsAdd(packageRoot + packageZclCluster + "." + StringToLowerCamelCase(cluster.Name).ToLower() + "."
-                        + StringToUpperCamelCase(command.Name));
+            //foreach (ZigBeeXmlCommand command in cluster.Commands)
+            //{
+            //    ImportsAdd(packageRoot + packageZclCluster + "." + StringToLowerCamelCase(cluster.Name).ToLower() + "."
+            //            + StringToUpperCamelCase(command.Name));
 
-                if (command.Source.Equals("server"))
-                {
-                    commandsServer++;
-                }
-                if (command.Source.Equals("client"))
-                {
-                    commandsClient++;
-                }
+            //    if (command.Source.Equals("server"))
+            //    {
+            //        commandsServer++;
+            //    }
+            //    if (command.Source.Equals("client"))
+            //    {
+            //        commandsClient++;
+            //    }
 
-                foreach (ZigBeeXmlField field in command.Fields)
-                {
-                    ImportsAddClass(field);
-                }
-            }
+            //    foreach (ZigBeeXmlField field in command.Fields)
+            //    {
+            //        ImportsAddClass(field);
+            //    }
+            //}
 
             bool addAttributeTypes = false;
             bool readAttributes = false;
@@ -155,7 +155,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             @out.WriteLine(" */");
             // outputClassJavaDoc(out);
             OutputClassGenerated(@out);
-            @out.WriteLine("public class " + className + " extends ZclCluster {");
+            @out.WriteLine("public class " + className + " : ZclCluster {");
 
             @out.WriteLine("    /**");
             @out.WriteLine("     * The ZigBee Cluster Library Cluster ID");
