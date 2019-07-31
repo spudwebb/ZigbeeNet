@@ -13,7 +13,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
         protected Dictionary<string, string> _dependencies;
 
         protected int _lineLen = 80;
-        protected string _sourceRootPath = @"C:\temp\java";
+        protected string _sourceRootPath = @"C:\temp\csharp";
         protected List<string> _importList = new List<string>();
 
         protected static string packageRoot = "";//"com.zsmartsystems.zigbee";
