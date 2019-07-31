@@ -94,7 +94,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             //new ZigBeeZclStructureGenerator(zclClusters, generatedDate, zclTypes);
             //new ZigBeeZclClusterTypeGenerator(zclClusters, generatedDate, zclTypes);
 
-            var zdoClusterGenerator = new ZigBeeZclCommandGenerator(zdoClusters, zclTypes);
+            //var zdoClusterGenerator = new ZigBeeZclCommandGenerator(zdoClusters, zclTypes);
 
             zclParser = new ZigBeeXmlParser();
             zclParser.AddFile("./Resources/zigbee_constants.xml");

@@ -16,7 +16,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
         protected string _sourceRootPath = @"C:\temp\java";
         protected List<string> _importList = new List<string>();
 
-        protected static string packageRoot = "com.zsmartsystems.zigbee";
+        protected static string packageRoot = "";//"com.zsmartsystems.zigbee";
         protected static string packageZcl = ".zcl";
         protected static string packageZclField = packageZcl + ".field";
         protected string packageZclCluster = packageZcl + ".clusters";
