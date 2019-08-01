@@ -80,7 +80,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 //}
 
                 string commandExtends = "";
-                if (packageRoot.Contains(".zcl."))
+                if (packageRoot.Contains(".zcl.", StringComparison.InvariantCultureIgnoreCase))
                 {
                     //ImportsAdd(packageRootPrefix + packageZcl + ".ZclCommand");
                     //ImportsAdd(packageRootPrefix + packageZclProtocol + ".ZclCommandDirection");
@@ -119,7 +119,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 @out.WriteLine(" * " + command.Name + " value object class.");
 
                 @out.WriteLine(" * ");
-                if (packageRoot.Contains(".zcl."))
+                if (packageRoot.Contains(".zcl.", StringComparison.InvariantCultureIgnoreCase))
                 {
                     @out.WriteLine(" * Cluster: " + cluster.Name + ". Command ID 0x"
                             + command.Code.ToString("X2") + " is sent "
@@ -139,10 +139,13 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 @out.WriteLine(" * Code is auto-generated. Modifications may be overwritten!");
                 @out.WriteLine(" */");
                 OutputClassGenerated(@out);
+
+                @out.WriteLine("namespace ZigBeeNet.ZCL.Clusters." + cluster.Name.Replace("/", "").Replace(" ", "").Replace("(", "").Replace(")", ""));
+                @out.WriteLine("{");
                 @out.Write("public class " + className + " : " + commandExtends);
                 if (command.Response != null)
                 {
-                    @out.Write(" implements ZigBeeTransactionMatcher");
+                    @out.Write(", IZigBeeTransactionMatcher");
                 }
                 @out.WriteLine(" {");
 
@@ -272,6 +275,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                 GenerateToString(@out, className, command.Fields, reservedFields);
 
                 @out.WriteLine();
+                @out.WriteLine("}");
                 @out.WriteLine("}");
 
                 @out.Flush();

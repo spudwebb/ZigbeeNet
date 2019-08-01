@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using ZigBeeNet.CodeGenerator.Xml;
 
@@ -155,12 +156,14 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             @out.WriteLine(" */");
             // outputClassJavaDoc(out);
             OutputClassGenerated(@out);
+            @out.WriteLine("namespace ZigBeeNet.ZCL.Clusters");
+            @out.WriteLine("{");
             @out.WriteLine("public class " + className + " : ZclCluster {");
 
             @out.WriteLine("    /**");
             @out.WriteLine("     * The ZigBee Cluster Library Cluster ID");
             @out.WriteLine("     */");
-            @out.WriteLine("    public const int CLUSTER_ID = 0x" + cluster.Code.ToString("X4"));
+            @out.WriteLine("    public const int CLUSTER_ID = 0x" + cluster.Code.ToString("X4") + ";");
             @out.WriteLine();
             @out.WriteLine("    /**");
             @out.WriteLine("     * The ZigBee Cluster Library Cluster Name");
@@ -181,6 +184,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                         {
                             if (attribute.Description.Count != 0)
                             {
+                                @out.WriteLine();
                                 @out.WriteLine("    /**");
                                 OutputWithLinebreak(@out, "    ", attribute.Description);
                                 @out.WriteLine("     */");
@@ -195,6 +199,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                     {
                         if (attribute.Description.Count != 0)
                         {
+                            @out.WriteLine();
                             @out.WriteLine("    /**");
                             OutputWithLinebreak(@out, "    ", attribute.Description);
                             @out.WriteLine("     */");
@@ -453,7 +458,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
                 @out.WriteLine("     * @return the {@link Future<CommandResult>} command result future");
                 @out.WriteLine("     */");
-                @out.Write("    public Task<CommandResult> " + StringToLowerCamelCase(command.Name) + "(");
+                @out.Write("    public Task<CommandResult> " + StringToUpperCamelCase(command.Name) + "(");
 
                 bool first = true;
                 foreach (ZigBeeXmlField field in fields)
@@ -482,11 +487,12 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                         @out.WriteLine("        command.Set" + StringToUpperCamelCase(field.Name) + "(" + StringToLowerCamelCase(field.Name) + ");");
                     }
                     @out.WriteLine();
-                    @out.WriteLine("        return send(command);");
+                    @out.WriteLine("        return Send(command);");
                 }
                 @out.WriteLine("    }");
             }
 
+            @out.WriteLine("}");
             @out.WriteLine("}");
 
             @out.Flush();
@@ -510,8 +516,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
                         {
                             string name = Regex.Replace(attribute.Name, "\\{\\{count\\}\\}", ArrayCount.ToString());
                             //String name = attribute.Name,"\\{\\{count\\}\\}", Integer.toString(ArrayCount));
-                            @out.WriteLine("        attributeMap.TryAdd(" + GetEnum(name) + ", "
-                                    + DefineAttribute(attribute, clusterName, name, 0) + ");");
+                            @out.WriteLine("        attributeMap.TryAdd(" + GetEnum(name) + ", " + DefineAttribute(attribute, clusterName, name, 0) + ");");
                             ArrayCount += arrayStep;
                         }
                     }
@@ -529,8 +534,8 @@ namespace ZigBeeNet.CodeGenerator.Zcl
 
         private string DefineAttribute(ZigBeeXmlAttribute attribute, string clusterName, string attributeName, int count)
         {
-            return "new ZclAttribute(this, " + GetEnum(attributeName) + ", \"" + attributeName + "\", " + "ZclDataType."
-                    + attribute.Type + ", " + !attribute.Optional + ", " + true + ", " + attribute.Writable + ", "
+            return "new ZclAttribute(this, " + GetEnum(attributeName) + ", \"" + attributeName + "\", " + "ZclDataType.Get(DataType."
+                    + attribute.Type + "), " + !attribute.Optional + ", " + true + ", " + attribute.Writable + ", "
                     + attribute.Reportable + ")";
         }
 

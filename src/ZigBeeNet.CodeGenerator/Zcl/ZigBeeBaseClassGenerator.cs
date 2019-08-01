@@ -17,16 +17,16 @@ namespace ZigBeeNet.CodeGenerator.Zcl
         protected List<string> _importList = new List<string>();
 
         protected static string packageRoot = "";//"com.zsmartsystems.zigbee";
-        protected static string packageZcl = ".zcl";
-        protected static string packageZclField = packageZcl + ".field";
-        protected string packageZclCluster = packageZcl + ".clusters";
-        protected string packageZclProtocol = packageZcl + ".protocol";
+        protected static string packageZcl = ".ZCL";
+        protected static string packageZclField = packageZcl + ".Field";
+        protected string packageZclCluster = packageZcl + ".Clusters";
+        protected string packageZclProtocol = packageZcl + ".Protocol";
         protected string packageZclProtocolCommand;
 
-        protected static string packageZdp = ".zdo";
-        protected static string packageZdpField = packageZdp + ".field";
-        protected string packageZdpCommand = packageZdp + ".command";
-        protected string packageZdpTransaction = packageZdp + ".transaction";
+        protected static string packageZdp = ".ZDO";
+        protected static string packageZdpField = packageZdp + ".Field";
+        protected string packageZdpCommand = packageZdp + ".Command";
+        protected string packageZdpTransaction = packageZdp + ".Transaction";
         protected string packageZdpDescriptors = packageZdpField;
 
         protected static List<string> standardTypes = new List<string>();
@@ -584,7 +584,7 @@ namespace ZigBeeNet.CodeGenerator.Zcl
             else
             {
                 return packageRoot + packageZclProtocolCommand + "."
-                        + StringToLowerCamelCase(cluster.Name).Replace("_", "").ToLower();
+                        + StringToUpperCamelCase(cluster.Name).Replace("_", "").ToLower();
             }
         }
     }
