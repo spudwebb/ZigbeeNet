@@ -13,6 +13,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>zigbee;netstandard;smart home;cc2531;philips hue;ikea tradfri;innr</PackageTags>
     <Description>This package can be used in combination with the ZigBeeNet package and is the dongle implementation for a Texas Instrument CC2531 hardware dongle</Description>
+    <RootNamespace>ZigBeeNet.Hardware.TI.CC2531</RootNamespace>
+    <AssemblyName>ZigBeeNet.Hardware.TI.CC2531</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

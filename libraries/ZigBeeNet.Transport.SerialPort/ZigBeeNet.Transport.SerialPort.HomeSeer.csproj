@@ -13,6 +13,8 @@
     <RepositoryUrl>https://github.com/zigbeenet/ZigbeeNet</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>SerialPort;zigbee;netstandard;smart home;cc2531;XBee;philips hue;ikea tradfri;innr</PackageTags>
+    <RootNamespace>ZigBeeNet.Transport.SerialPort</RootNamespace>
+    <AssemblyName>ZigBeeNet.Transport.SerialPort</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -12,6 +12,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>zigbee;netstandard;smart home;cc2531;philips hue;ikea tradfri;innr</PackageTags>
     <Description>This package can be used in combination with the ZigBeeNet package and is the dongle implementation for a Digi XBee hardware dongle</Description>
+    <AssemblyName>ZigBeeNet.Hardware.Digi.XBee</AssemblyName>
+    <RootNamespace>ZigBeeNet.Hardware.Digi.XBee</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\ZigBeeNet\ZigBeeNet.HomeSeer.csproj" />
