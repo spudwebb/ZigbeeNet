@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>ZigBeeNet Contributors</Authors>
+    <Version>1.1.0</Version>
+    <Company>ZigBeeNet</Company>
+    <Description>This package contains a SerialPort implementation for connecting, reading and sending packages with the ZigBee Hardware dongles</Description>
+    <PackageLicenseExpression>EPL-1.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/zigbeenet/ZigbeeNet</PackageProjectUrl>
+    <PackageIconUrl>https://github.com/zigbeenet/ZigbeeNet/blob/master/icon.png?raw=true</PackageIconUrl>
+    <RepositoryUrl>https://github.com/zigbeenet/ZigbeeNet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>SerialPort;zigbee;netstandard;smart home;cc2531;XBee;philips hue;ikea tradfri;innr</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ZigBeeNet\ZigBeeNet.HomeSeer.csproj" />
+  </ItemGroup>
+
+</Project>
