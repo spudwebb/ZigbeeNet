@@ -282,7 +282,7 @@ namespace ZigBeeNet.PlayGround
                                     {
                                         NodeDescriptorRequest nodeDescriptorRequest = new NodeDescriptorRequest()
                                         {
-                                            Destination = endpointAddress,
+                                            DestinationAddress = endpointAddress,
                                             NwkAddrOfInterest = addr
                                         };
 
@@ -359,6 +359,15 @@ namespace ZigBeeNet.PlayGround
                                                     Console.WriteLine("Attribute value read error: " + statusCode);
                                                 }
                                             }
+                                        }
+                                    }
+                                    else if (cmd == "discover attributes")
+                                    {
+                                        foreach (int clusterId in endpoint.GetInputClusterIds())
+                                        {
+                                            ZclCluster cluster = endpoint.GetInputCluster(clusterId);
+                                            if (!await cluster.DiscoverAttributes(true))
+                                                Console.WriteLine("Error while discovering attributes for cluster {0}", cluster.GetClusterName());
                                         }
                                     }
                                 }
