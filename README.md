@@ -1,6 +1,6 @@
 <img src="https://github.com/Mr-Markus/ZigbeeNet/blob/master/icon.png" width="150px" />
 
-# ZigBeeNet [![Build status](https://ci.appveyor.com/api/projects/status/o2x3lg7eo46jl2j5/branch/master?svg=true)](https://ci.appveyor.com/project/Mr-Markus/zigbeenet-mlw5f/branch/master) [![NuGet Status](https://img.shields.io/nuget/v/ZigBeeNet.svg?style=flat)](https://www.nuget.org/packages/ZigBeeNet) [![Twitter Follow](https://img.shields.io/twitter/follow/Zigbee_Net.svg?style=social)](https://twitter.com/Zigbee_Net)
+# ZigBeeNet [![Build status](https://ci.appveyor.com/api/projects/status/2c0c15ta3ow8pfib/branch/master?svg=true)](https://ci.appveyor.com/project/Mr-Markus/zigbeenet/branch/master) [![NuGet Status](https://img.shields.io/nuget/v/ZigBeeNet.svg?style=flat)](https://www.nuget.org/packages/ZigBeeNet) [![Twitter Follow](https://img.shields.io/twitter/follow/Zigbee_Net.svg?style=social)](https://twitter.com/Zigbee_Net)
 
 ZigBeeNet is a implementation of the Zigbee 3.0 Cluster Library for .NET Standard.
 
@@ -70,7 +70,7 @@ namespace ZigBeeNet.PlayGround
 }
 ```
 
-## Zigbee Stacks
+## Zigbee Stacks / Supported Dongles
 
 Because Zigbee is just a specification you need a stack of a manufacturer that implements it. ZigBeeNet is developed with a strict seperation of the Zigbee Cluster Library (ZCL) and the various manufacturer stacks. Because of that it is possible to use different hardware for your Zigbee solution
 
@@ -92,6 +92,14 @@ Digi XBee is the brand name of a family of form factor compatible radio modules 
 Source: [https://en.wikipedia.org/wiki/XBee](https://en.wikipedia.org/wiki/XBee)
 
 We have tested it with the XBee ZigBee S2C chip
+
+### ConBee
+
+ConBee is a hardware dongle from Dresden Elektronik
+
+Source: [https://www.phoscon.de/en/conbee2](https://www.phoscon.de/en/conbee2)
+
+We have tested it with the ConBee 2
 
 ## Free beer !!
 
@@ -157,3 +165,5 @@ Some documentation used to implement dongle drivers is copywrite to the respecti
 [@TheBlubb14](https://github.com/TheBlubb14)
 
 [@maksim789456](https://github.com/maksim789456)
+
+[@DavidKarlas](https://github.com/DavidKarlas)

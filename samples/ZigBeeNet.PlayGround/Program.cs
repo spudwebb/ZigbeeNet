@@ -11,7 +11,9 @@ using ZigBeeNet.App.Basic;
 using ZigBeeNet.App.Discovery;
 using ZigBeeNet.Database;
 using ZigBeeNet.Hardware.Digi.XBee;
+using ZigBeeNet.Hardware.Ember;
 using ZigBeeNet.Hardware.TI.CC2531;
+using ZigBeeNet.Security;
 using ZigBeeNet.Tranport.SerialPort;
 using ZigBeeNet.Transaction;
 using ZigBeeNet.Transport;
@@ -41,14 +43,18 @@ namespace ZigBeeNet.PlayGround
             ZigBeeDongle zigBeeDongle = ZigBeeDongle.TiCc2531;
             string port = "";
             int baudrate = 115200;
+            string flow = "";
+            FlowControl flowControl = FlowControl.FLOWCONTROL_OUT_NONE;
+            bool resetNetwork = false;
 
             OptionSet options = new OptionSet
             {
                 { "h|help", "show this message and exit", h => showHelp = h != null },
-                { "zbd|zigbeeDongle=", "the zigbee dongle to use. 0 = TiCc2531 | 1 = DigiXBee | 2 = Conbee", (ZigBeeDongle zbd) => zigBeeDongle = zbd },
+                { "zbd|zigbeeDongle=", "the zigbee dongle to use. 0 = TiCc2531 | 1 = DigiXBee | 2 = Conbee | 3 = Ember ", (ZigBeeDongle zbd) => zigBeeDongle = zbd },
                 { "p|port=", "the COM port to use", p =>  port = p},
                 { "b|baud=", $"the port baud rate to use. default is {baudrate}", b => int.TryParse(b, out baudrate)},
-
+                { "f|flow=", $"the flow control (none | hardware | software)", f => flow = f },
+                { "r|reset", $"Reset the Zigbee network", r => resetNetwork = r != null },
             };
 
             try
@@ -71,7 +77,39 @@ namespace ZigBeeNet.PlayGround
                     port = Console.ReadLine();
                 }
 
-                ZigBeeSerialPort zigbeePort = new ZigBeeSerialPort(port, baudrate);
+                if(string.IsNullOrEmpty(flow))
+                {
+                    // Default the flow control based on the dongle
+                    switch (zigBeeDongle)
+                    {
+                        case ZigBeeDongle.Ember:
+                            flowControl = FlowControl.FLOWCONTROL_OUT_XONOFF;
+                            break;
+                        default:
+                            flowControl = FlowControl.FLOWCONTROL_OUT_NONE;
+                            break;
+                    }
+                }
+                else
+                {
+                    switch(flow)
+                    {
+                        case "software":
+                            flowControl = FlowControl.FLOWCONTROL_OUT_XONOFF;
+                            break;
+                        case "hardware":
+                            flowControl = FlowControl.FLOWCONTROL_OUT_RTSCTS;
+                            break;
+                        case "none":
+                            flowControl = FlowControl.FLOWCONTROL_OUT_NONE;
+                            break;
+                        default:
+                            Console.WriteLine($"Unknown flow control option used: {flow}");
+                            break;
+                    }
+                }
+
+                ZigBeeSerialPort zigbeePort = new ZigBeeSerialPort(port, baudrate, flowControl);
 
                 IZigBeeTransportTransmit dongle;
                 switch (zigBeeDongle)
@@ -91,6 +129,12 @@ namespace ZigBeeNet.PlayGround
                             dongle = new ZigbeeDongleConBee(zigbeePort);
                         }
                         break;
+                    case ZigBeeDongle.Ember:
+                        {
+                            dongle = new ZigBeeDongleEzsp(zigbeePort);
+                            ((ZigBeeDongleEzsp)dongle).SetPollRate(0);
+                        }
+                        break;
                     default:
                         {
                             dongle = new ZigBeeDongleTiCc2531(zigbeePort);
@@ -100,7 +144,7 @@ namespace ZigBeeNet.PlayGround
 
                 ZigBeeNetworkManager networkManager = new ZigBeeNetworkManager(dongle);
 
-                JsonNetworkDataStore dataStore = new JsonNetworkDataStore("devices.json");
+                JsonNetworkDataStore dataStore = new JsonNetworkDataStore("devices");
                 networkManager.SetNetworkDataStore(dataStore);
 
                 ZigBeeDiscoveryExtension discoveryExtension = new ZigBeeDiscoveryExtension();
@@ -129,8 +173,36 @@ namespace ZigBeeNet.PlayGround
                     ((ZigBeeDongleTiCc2531)dongle).SetLedMode(1, false); // green led
                     ((ZigBeeDongleTiCc2531)dongle).SetLedMode(2, false); // red led
                 }
+                Console.WriteLine($"PAN ID           = {networkManager.ZigBeePanId}");
+                Console.WriteLine($"Extended PAN ID  = {networkManager.ZigBeeExtendedPanId}");
+                Console.WriteLine($"Channel          = {networkManager.ZigbeeChannel}");
+                Console.WriteLine($"Network Key      = {networkManager.ZigBeeNetworkKey}");
+                Console.WriteLine($"Link Key         = {networkManager.ZigBeeLinkKey}");
 
-                ZigBeeStatus startupSucceded = networkManager.Startup(false);
+                if (resetNetwork)
+                {
+                    //TODO: make the network parameters configurable
+                    ushort panId = 1;
+                    ExtendedPanId extendedPanId = new ExtendedPanId();
+                    ZigBeeChannel channel = ZigBeeChannel.CHANNEL_11;
+                    ZigBeeKey networkKey = ZigBeeKey.CreateRandom();
+                    ZigBeeKey linkKey = new ZigBeeKey(new byte[] { 0x5A, 0x69, 0x67, 0x42, 0x65, 0x65, 0x41, 0x6C, 0x6C, 0x69, 0x61, 0x6E, 0x63, 0x65, 0x30, 0x39 });
+
+                    Console.WriteLine($"*** Resetting network");
+                    Console.WriteLine($"  * PAN ID           = {panId}");
+                    Console.WriteLine($"  * Extended PAN ID  = {extendedPanId}");
+                    Console.WriteLine($"  * Channel          = {channel}");
+                    Console.WriteLine($"  * Network Key      = {networkKey}");
+                    Console.WriteLine($"  * Link Key         = {linkKey}");
+
+                    networkManager.SetZigBeeChannel(channel);
+                    networkManager.SetZigBeePanId(panId);
+                    networkManager.SetZigBeeExtendedPanId(extendedPanId);
+                    networkManager.SetZigBeeNetworkKey(networkKey);
+                    networkManager.SetZigBeeLinkKey(linkKey);
+                }
+
+                ZigBeeStatus startupSucceded = networkManager.Startup(resetNetwork);
 
                 if (startupSucceded == ZigBeeStatus.SUCCESS)
                 {
@@ -159,6 +231,57 @@ namespace ZigBeeNet.PlayGround
                     else if (cmd == "unjoin")
                     {
                         coord.PermitJoin(false);
+                    }
+                    else if(cmd == "endpoints")
+                    {
+                        var tmp = Console.ForegroundColor;
+                        Console.ForegroundColor = ConsoleColor.DarkGreen;
+                        Console.Write("Destination Address: ");
+                        Console.ForegroundColor = tmp;
+                        string nwkAddr = Console.ReadLine();
+
+                        if (ushort.TryParse(nwkAddr, out ushort addr))
+                        {
+                            var node = networkManager.Nodes.FirstOrDefault(n => n.NetworkAddress == addr);
+
+                            if(node != null) 
+                            {
+                                Console.WriteLine(new string('-', 20));
+
+                                foreach (var endpoint in node.Endpoints.Values)
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Blue;
+                                    Console.WriteLine("Input Cluster:" + Environment.NewLine);
+                                    Console.ForegroundColor = tmp;
+
+                                    foreach (var inputClusterId in endpoint.GetInputClusterIds())
+                                    {
+                                        var cluster = endpoint.GetInputCluster(inputClusterId);
+                                        var clusterName = cluster.GetClusterName();
+                                        Console.WriteLine($"{clusterName}");
+                                    }
+                                }
+
+                                Console.WriteLine();
+
+                                foreach (var endpoint in node.Endpoints.Values)
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Blue;
+                                    Console.WriteLine("Output Cluster:" + Environment.NewLine);
+                                    Console.ForegroundColor = tmp;
+
+                                    foreach (var outputClusterIds in endpoint.GetOutputClusterIds())
+                                    {
+                                        var cluster = endpoint.GetOutputCluster(outputClusterIds);
+                                        var clusterName = cluster.GetClusterName();
+                                        Console.WriteLine($"{clusterName}");
+                                    }
+                                }
+
+                                Console.WriteLine(new string('-', 20));
+                            }
+                        }
+                      
                     }
                     else if (cmd == "add")
                     {
@@ -400,7 +523,16 @@ namespace ZigBeeNet.PlayGround
                     }
 
                     await Task.Delay(100);
-                    Console.WriteLine(networkManager.Nodes.Count + " node(s)" + Environment.NewLine);
+
+                    Console.WriteLine(Environment.NewLine + networkManager.Nodes.Count + " node(s)" + Environment.NewLine);
+
+                    for (int i = 0; i < networkManager.Nodes.Count; i++)
+                    {
+                        var node = networkManager.Nodes[i];
+                        Console.WriteLine($"{i}. {node.LogicalType}: {node.NetworkAddress}");
+                    }
+
+                    Console.WriteLine();
                     var currentForeGroundColor = Console.ForegroundColor;
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
                     Console.Write("cmd> ");
