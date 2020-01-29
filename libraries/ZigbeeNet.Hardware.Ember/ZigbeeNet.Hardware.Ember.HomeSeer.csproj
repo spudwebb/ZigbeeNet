@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+	<AssemblyName>ZigBeeNet.Hardware.Ember</AssemblyName>
+    <RootNamespace>ZigBeeNet.Hardware.Ember</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ZigBeeNet\ZigBeeNet.HomeSeer.csproj" />
+  </ItemGroup>
+</Project>
