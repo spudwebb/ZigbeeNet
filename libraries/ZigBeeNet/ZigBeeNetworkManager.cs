@@ -654,6 +654,7 @@ namespace ZigBeeNet
             _commandNotifier.RemoveCommandListener(commandListener);
         }
 
+
         public void ReceiveCommand(ZigBeeApsFrame apsFrame)
         {
             lock (_networkStateSync)
@@ -666,6 +667,22 @@ namespace ZigBeeNet
             }
 
             Log.Debug("RX APS: {ApsFrame}", apsFrame);
+
+            if (apsFrame == null)
+            {
+                return;
+            }
+
+            if (GetNode(apsFrame.SourceAddress) == null)
+            {
+                Log.Debug("Incoming message from unknown node {0}: Notifying announce listeners", apsFrame.SourceAddress.ToString("X4"));
+
+                // Notify the listeners that we have heard a command that was unknown to us
+                foreach (IZigBeeAnnounceListener announceListener in _announceListeners)
+                {
+                    announceListener.AnnounceUnknownDevice(apsFrame.SourceAddress);
+                }
+            }
 
             // Create the deserialiser
             Deserializer = new DefaultDeserializer(apsFrame.Payload);
@@ -819,10 +836,6 @@ namespace ZigBeeNet
 
             // This method should only be called when the transport layer has authoritative information about
             // a devices status. Therefore, we should update the network manager view of a device as appropriate.
-            // A coordinator/router may ask a device to leave the network and rejoin. In this case, we do not want
-            // to remove the node - otherwise we would have to perform the rediscovery of services etc.
-            // Instead, we mark the node status as OFFLINE, and leave it to the application to remove the node from
-            // the network manager.
             switch (deviceStatus)
             {
                 // Device has gone - lets remove it
@@ -841,7 +854,7 @@ namespace ZigBeeNet
                     else
                     {
                         node.SetNodeState(ZigBeeNodeState.OFFLINE);
-                        UpdateNode(node);
+                        RemoveNode(node);
                     }
                     break;
 
@@ -1038,12 +1051,12 @@ namespace ZigBeeNet
             {
                 lock (command)
                 {
-                    //ZigBeeTransactionFuture transactionFuture = new ZigBeeTransactionFuture();
+            //ZigBeeTransactionFuture transactionFuture = new ZigBeeTransactionFuture();
 
-                    SendCommand(command);
-                    //transactionFuture.set(new CommandResult(new BroadcastResponse()));
+            SendCommand(command);
+            //transactionFuture.set(new CommandResult(new BroadcastResponse()));
 
-                    return new CommandResult(new BroadcastResponse());
+            return new CommandResult(new BroadcastResponse());
                 }
             });
         }
@@ -1164,7 +1177,7 @@ namespace ZigBeeNet
                     Log.Debug("{IeeeAddress}: No node found after leave command", leaveAddress);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Log.Debug("Error sending leave command {Exception}", ex);
             }
@@ -1351,7 +1364,7 @@ namespace ZigBeeNet
                 return;
             }
 
-            Log.Debug("{IeeeAddress}: Node {NetworkAddress} added to the network", node.IeeeAddress, node.NetworkAddress);
+            Log.Debug("{IeeeAddress}: Updating Node {NetworkAddress}", node.IeeeAddress, node.NetworkAddress);
 
             lock (_networkNodes)
             {
