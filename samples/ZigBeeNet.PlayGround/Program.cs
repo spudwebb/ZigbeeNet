@@ -175,10 +175,6 @@ namespace ZigBeeNet.PlayGround
 
                 ZigBeeDiscoveryExtension discoveryExtension = new ZigBeeDiscoveryExtension();
                 discoveryExtension.SetUpdatePeriod(60);
-                if (zigBeeDongle == ZigBeeDongle.ConBee)
-                {
-                    discoveryExtension.SkipNetworkAddressRequestCheck = true;
-                }
                 networkManager.AddExtension(discoveryExtension);
 
                 // Initialise the network
