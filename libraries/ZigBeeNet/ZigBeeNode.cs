@@ -390,7 +390,7 @@ namespace ZigBeeNet
                         listener.DeviceAdded(endpoint);
                     }).ContinueWith((t) =>
                     {
-                        Log.Error(t.Exception, "Error: {Exception}");
+                        Log.Error(t.Exception, "Error: {Exception}", t.Exception.Message);
                     }, TaskContinuationOptions.OnlyOnFaulted);
                 }
             }
@@ -415,7 +415,7 @@ namespace ZigBeeNet
                         listener.DeviceUpdated(endpoint);
                     }).ContinueWith((t) =>
                     {
-                        Log.Error(t.Exception, "Error: {Exception}");
+                        Log.Error(t.Exception, "Error: {Exception}", t.Exception.Message);
                     }, TaskContinuationOptions.OnlyOnFaulted);
                 }
             }
@@ -441,7 +441,7 @@ namespace ZigBeeNet
                             listener.DeviceRemoved(endpoint);
                         }).ContinueWith((t) =>
                         {
-                            Log.Error(t.Exception, "Error: {Exception}");
+                            Log.Error(t.Exception, "Error: {Exception}", t.Exception.Message);
                         }, TaskContinuationOptions.OnlyOnFaulted);
                     }
                 }
@@ -525,6 +525,13 @@ namespace ZigBeeNet
             }
 
             bool updated = false;
+
+            if (node.NodeState != ZigBeeNodeState.UNKNOWN && NodeState != node.NodeState)
+            {
+                Log.Debug("{IeeeAddress}: Node state updated from {NodeState} to {NewNodeState}", IeeeAddress, NodeState, node.NodeState);
+                NodeState = node.NodeState;
+                updated = true;
+            }
 
             if (NetworkAddress != 0 && !NetworkAddress.Equals(node.NetworkAddress))
             {
